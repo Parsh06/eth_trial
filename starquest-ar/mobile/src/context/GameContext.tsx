@@ -1,0 +1,304 @@
+import React, { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
+import { AppState, User, Star, Challenge, Quest, LeaderboardEntry, GameContextType } from '../types';
+import apiService from '../services/api';
+import websocketService from '../services/websocket';
+
+// Mock data
+const mockUser: User = {
+  id: '1',
+  username: 'StarHunter',
+  stats: {
+    starsFound: 3,
+    questsCompleted: 7,
+    nftsEarned: 3,
+    streak: 5
+  },
+  achievements: ['First Star', 'Quick Learner', 'Streak Master']
+};
+
+const mockStars: Star[] = [
+  {
+    id: '1',
+    name: 'Alpha Star',
+    description: 'The first star in your journey',
+    position: { x: 1, y: 1 },
+    status: 'completed',
+    difficulty: 'beginner',
+    reward: {
+      nftId: 'nft-1',
+      name: 'Alpha Star NFT',
+      rarity: 'common',
+      image: 'https://via.placeholder.com/200x200/8B5CF6/FFFFFF?text=Alpha'
+    }
+  },
+  {
+    id: '2',
+    name: 'Beta Star',
+    description: 'A challenging star for the brave',
+    position: { x: 2, y: 1 },
+    status: 'completed',
+    difficulty: 'intermediate',
+    reward: {
+      nftId: 'nft-2',
+      name: 'Beta Star NFT',
+      rarity: 'rare',
+      image: 'https://via.placeholder.com/200x200/10B981/FFFFFF?text=Beta'
+    }
+  },
+  {
+    id: '3',
+    name: 'Gamma Star',
+    description: 'The ultimate test of skill',
+    position: { x: 3, y: 1 },
+    status: 'available',
+    difficulty: 'expert',
+    reward: {
+      nftId: 'nft-3',
+      name: 'Gamma Star NFT',
+      rarity: 'epic',
+      image: 'https://via.placeholder.com/200x200/F59E0B/FFFFFF?text=Gamma'
+    }
+  },
+  {
+    id: '4',
+    name: 'Delta Star',
+    description: 'Hidden in the shadows',
+    position: { x: 1, y: 2 },
+    status: 'locked',
+    difficulty: 'intermediate',
+    reward: {
+      nftId: 'nft-4',
+      name: 'Delta Star NFT',
+      rarity: 'rare',
+      image: 'https://via.placeholder.com/200x200/EF4444/FFFFFF?text=Delta'
+    }
+  }
+];
+
+const mockChallenges: Challenge[] = [
+  {
+    id: 'challenge-1',
+    starId: '3',
+    type: 'trivia',
+    title: 'Space Knowledge',
+    description: 'Test your knowledge about the cosmos',
+    question: 'What is the closest star to Earth?',
+    options: ['Sun', 'Proxima Centauri', 'Alpha Centauri', 'Sirius'],
+    correctAnswer: 'Sun',
+    hint: 'It provides light and warmth to our planet',
+    timeLimit: 30,
+    completed: false
+  }
+];
+
+const mockQuests: Quest[] = [
+  {
+    id: 'quest-1',
+    title: 'Daily Star Hunt',
+    description: 'Find 3 stars today',
+    type: 'daily',
+    difficulty: 'beginner',
+    progress: 2,
+    maxProgress: 3,
+    rewards: { points: 100 },
+    timeRemaining: 86400,
+    completed: false
+  },
+  {
+    id: 'quest-2',
+    title: 'Weekly Explorer',
+    description: 'Complete 10 challenges this week',
+    type: 'weekly',
+    difficulty: 'intermediate',
+    progress: 7,
+    maxProgress: 10,
+    rewards: { points: 500, nftId: 'weekly-nft' },
+    timeRemaining: 259200,
+    completed: false
+  }
+];
+
+const mockLeaderboard: LeaderboardEntry[] = [
+  {
+    rank: 1,
+    user: { ...mockUser, username: 'StarMaster' },
+    score: 1500,
+    category: 'stars'
+  },
+  {
+    rank: 2,
+    user: mockUser,
+    score: 1200,
+    category: 'stars'
+  },
+  {
+    rank: 3,
+    user: { ...mockUser, username: 'CosmicHunter' },
+    score: 1000,
+    category: 'stars'
+  }
+];
+
+type GameAction = 
+  | { type: 'ONBOARDING_COMPLETE' }
+  | { type: 'WALLET_CONNECT'; address: string }
+  | { type: 'TAB_CHANGE'; tab: string }
+  | { type: 'CHALLENGE_SELECT'; id: string }
+  | { type: 'CHALLENGE_COMPLETE'; success: boolean }
+  | { type: 'DISCONNECT_WALLET' }
+  | { type: 'QR_SCAN'; data: string };
+
+const initialState: AppState = { screen: "onboarding" };
+
+function gameReducer(state: AppState, action: GameAction): AppState {
+  switch (action.type) {
+    case 'ONBOARDING_COMPLETE':
+      return { screen: "wallet-connect" };
+    case 'WALLET_CONNECT':
+      return { screen: "main", activeTab: "home", walletAddress: action.address };
+    case 'TAB_CHANGE':
+      return { ...state, activeTab: action.tab };
+    case 'CHALLENGE_SELECT':
+      return { ...state, screen: "challenge", challengeId: action.id };
+    case 'CHALLENGE_COMPLETE':
+      return { ...state, screen: "reward" };
+    case 'DISCONNECT_WALLET':
+      return { screen: "onboarding" };
+    case 'QR_SCAN':
+      // Handle QR scan logic
+      return state;
+    default:
+      return state;
+  }
+}
+
+const GameContext = createContext<GameContextType | undefined>(undefined);
+
+export function GameProvider({ children }: { children: ReactNode }) {
+  const [state, dispatch] = useReducer(gameReducer, initialState);
+  const [user, setUser] = React.useState<User | null>(null);
+  const [stars, setStars] = React.useState<Star[]>([]);
+  const [challenges, setChallenges] = React.useState<Challenge[]>([]);
+  const [quests, setQuests] = React.useState<Quest[]>([]);
+  const [leaderboard, setLeaderboard] = React.useState<LeaderboardEntry[]>([]);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  // Initialize data on mount
+  useEffect(() => {
+    loadInitialData();
+  }, []);
+
+  const loadInitialData = async () => {
+    try {
+      setLoading(true);
+      // Load user profile if authenticated
+      const userProfile = await apiService.getUserProfile();
+      if (userProfile.success) {
+        setUser(userProfile.user);
+      }
+      
+      // Load initial data
+      const [starsData, questsData, leaderboardData] = await Promise.all([
+        apiService.getStars(),
+        apiService.getQuests(),
+        apiService.getLeaderboard('stars'),
+      ]);
+      
+      setStars(starsData.stars || []);
+      setQuests(questsData.quests || []);
+      setLeaderboard(leaderboardData.leaderboard || []);
+    } catch (error) {
+      console.error('Error loading initial data:', error);
+      setError('Failed to load data');
+      // Fallback to mock data
+      setUser(mockUser);
+      setStars(mockStars);
+      setQuests(mockQuests);
+      setLeaderboard(mockLeaderboard);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOnboardingComplete = () => {
+    dispatch({ type: 'ONBOARDING_COMPLETE' });
+  };
+
+  const handleWalletConnect = async (address: string) => {
+    try {
+      setLoading(true);
+      // In a real implementation, you would get signature from wallet
+      const signature = 'mock-signature';
+      const message = 'Connect to StarQuest AR';
+      
+      const response = await apiService.walletLogin(address, signature, message);
+      
+      if (response.success) {
+        setUser(response.user);
+        dispatch({ type: 'WALLET_CONNECT', address });
+        // Connect to WebSocket
+        websocketService.connect(response.token);
+      } else {
+        setError('Failed to connect wallet');
+      }
+    } catch (error) {
+      console.error('Wallet connect error:', error);
+      setError('Failed to connect wallet');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleTabChange = (tab: string) => {
+    dispatch({ type: 'TAB_CHANGE', tab });
+  };
+
+  const handleChallengeSelect = (id: string) => {
+    dispatch({ type: 'CHALLENGE_SELECT', id });
+  };
+
+  const handleChallengeComplete = (success: boolean) => {
+    dispatch({ type: 'CHALLENGE_COMPLETE', success });
+  };
+
+  const handleDisconnectWallet = () => {
+    dispatch({ type: 'DISCONNECT_WALLET' });
+  };
+
+  const handleQRScan = (data: string) => {
+    dispatch({ type: 'QR_SCAN', data });
+  };
+
+  const value: GameContextType = {
+    state,
+    user,
+    stars,
+    challenges,
+    quests,
+    leaderboard,
+    loading,
+    error,
+    handleOnboardingComplete,
+    handleWalletConnect,
+    handleTabChange,
+    handleChallengeSelect,
+    handleChallengeComplete,
+    handleDisconnectWallet,
+    handleQRScan
+  };
+
+  return (
+    <GameContext.Provider value={value}>
+      {children}
+    </GameContext.Provider>
+  );
+}
+
+export function useGame() {
+  const context = useContext(GameContext);
+  if (context === undefined) {
+    throw new Error('useGame must be used within a GameProvider');
+  }
+  return context;
+}
