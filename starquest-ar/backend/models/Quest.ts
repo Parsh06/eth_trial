@@ -216,7 +216,7 @@ QuestSchema.methods.addParticipant = function(userId: string) {
 };
 
 QuestSchema.methods.removeParticipant = function(userId: string) {
-  this.participants = this.participants.filter(id => id.toString() !== userId);
+  this.participants = this.participants.filter((id: string) => id.toString() !== userId);
   return this.save();
 };
 

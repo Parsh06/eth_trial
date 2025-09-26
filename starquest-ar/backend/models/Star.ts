@@ -286,7 +286,7 @@ StarSchema.methods.checkConditions = function(userLocation: { latitude: number; 
   
   // Check required items
   if (this.conditions.requiredItems) {
-    const hasAllItems = this.conditions.requiredItems.every(item => 
+    const hasAllItems = this.conditions.requiredItems.every((item: string) => 
       userItems.includes(item)
     );
     if (!hasAllItems) return false;

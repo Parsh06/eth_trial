@@ -1,8 +1,36 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { Quest } from '../models/Quest';
 import { User } from '../models/User';
 
+// Extend Request interface to include user
+interface AuthenticatedRequest extends Request {
+  user?: {
+    userId: string;
+    walletAddress: string;
+  };
+}
+
 const router = express.Router();
+
+// Middleware to authenticate JWT token
+function authenticateToken(req: AuthenticatedRequest, res: Response, next: any) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  
+  if (!token) {
+    return res.status(401).json({ error: 'Access token required' });
+  }
+  
+  const jwt = require('jsonwebtoken');
+  jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key', (err: any, user: any) => {
+    if (err) {
+      return res.status(403).json({ error: 'Invalid token' });
+    }
+    
+    req.user = user;
+    next();
+  });
+}
 
 // Get all active quests
 router.get('/', async (req, res) => {
@@ -22,16 +50,19 @@ router.get('/', async (req, res) => {
     if (difficulty) filter.difficulty = difficulty;
     
     if (location) {
-      const [lat, lng] = location.split(',').map(Number);
-      filter.location = {
-        $near: {
-          $geometry: {
-            type: 'Point',
-            coordinates: [lng, lat]
-          },
-          $maxDistance: Number(radius)
-        }
-      };
+      const locationStr = Array.isArray(location) ? location[0] : location;
+      if (typeof locationStr === 'string') {
+        const [lat, lng] = locationStr.split(',').map(Number);
+        filter.location = {
+          $near: {
+            $geometry: {
+              type: 'Point',
+              coordinates: [lng, lat]
+            },
+            $maxDistance: Number(radius)
+          }
+        };
+      }
     }
     
     const quests = await Quest.find(filter)
@@ -60,8 +91,7 @@ router.get('/', async (req, res) => {
         startDate: quest.startDate,
         endDate: quest.endDate,
         metadata: quest.metadata,
-        participantCount: quest.participantCount,
-        isFull: quest.isFull
+        isFull: quest.participants.length >= (quest.maxParticipants || Infinity)
       }))
     });
     
@@ -115,7 +145,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create new quest
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const {
       title,
@@ -146,7 +176,7 @@ router.post('/', authenticateToken, async (req, res) => {
       stars: stars || [],
       rewards: rewards || { experience: 0 },
       requirements: requirements || {},
-      creator: req.user.userId,
+      creator: req.user?.userId,
       maxParticipants,
       startDate: startDate || new Date(),
       endDate,
@@ -163,6 +193,9 @@ router.post('/', authenticateToken, async (req, res) => {
     await quest.save();
     
     // Add creator as first participant
+    if (!req.user?.userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
     await quest.addParticipant(req.user.userId);
     
     res.status(201).json({
@@ -187,7 +220,7 @@ router.post('/', authenticateToken, async (req, res) => {
 });
 
 // Join quest
-router.post('/:id/join', authenticateToken, async (req, res) => {
+router.post('/:id/join', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const quest = await Quest.findById(req.params.id);
     
@@ -200,7 +233,7 @@ router.post('/:id/join', authenticateToken, async (req, res) => {
     }
     
     // Check if user meets requirements
-    const user = await User.findById(req.user.userId);
+    const user = await User.findById(req.user?.userId);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -209,6 +242,9 @@ router.post('/:id/join', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'Insufficient level' });
     }
     
+    if (!req.user?.userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
     await quest.addParticipant(req.user.userId);
     
     res.json({
@@ -223,7 +259,7 @@ router.post('/:id/join', authenticateToken, async (req, res) => {
 });
 
 // Leave quest
-router.post('/:id/leave', authenticateToken, async (req, res) => {
+router.post('/:id/leave', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const quest = await Quest.findById(req.params.id);
     
@@ -231,6 +267,9 @@ router.post('/:id/leave', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'Quest not found' });
     }
     
+    if (!req.user?.userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
     await quest.removeParticipant(req.user.userId);
     
     res.json({
@@ -245,10 +284,13 @@ router.post('/:id/leave', authenticateToken, async (req, res) => {
 });
 
 // Get user's quests
-router.get('/user/my-quests', authenticateToken, async (req, res) => {
+router.get('/user/my-quests', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     const { status = 'all', limit = 20, page = 1 } = req.query;
     
+    if (!req.user?.userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
     const filter: any = { participants: req.user.userId };
     
     if (status !== 'all') {
@@ -286,25 +328,6 @@ router.get('/user/my-quests', authenticateToken, async (req, res) => {
   }
 });
 
-// Middleware to authenticate JWT token
-function authenticateToken(req: any, res: any, next: any) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  
-  if (!token) {
-    return res.status(401).json({ error: 'Access token required' });
-  }
-  
-  const jwt = require('jsonwebtoken');
-  jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key', (err: any, user: any) => {
-    if (err) {
-      return res.status(403).json({ error: 'Invalid token' });
-    }
-    
-    req.user = user;
-    next();
-  });
-}
 
 export default router;
 

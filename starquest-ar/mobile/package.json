@@ -42,7 +42,10 @@
     "three": "^0.150.0",
     "@react-native-async-storage/async-storage": "1.23.1",
     "axios": "^1.6.2",
-    "socket.io-client": "^4.7.4"
+    "socket.io-client": "^4.7.4",
+    "@walletconnect/react-native-dapp": "^2.0.0",
+    "react-native-geolocation-service": "^5.3.1",
+    "expo-vision-camera": "^3.0.0"
   },
   "devDependencies": {
     "@types/react": "~18.2.45",

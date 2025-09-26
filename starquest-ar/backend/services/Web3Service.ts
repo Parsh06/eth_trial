@@ -120,7 +120,7 @@ export class Web3Service {
       return {
         chainId: network.chainId.toString(),
         name: network.name,
-        ensAddress: network.ensAddress,
+        ensAddress: (network as any).ensAddress,
       };
     } catch (error) {
       console.error('Error getting network info:', error);
