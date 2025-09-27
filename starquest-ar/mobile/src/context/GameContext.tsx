@@ -181,8 +181,11 @@ function gameReducer(state: AppState, action: GameAction): AppState {
       return restoreState;
     case 'TAB_CHANGE':
       if (state.screen === "main") {
-        return { ...state, activeTab: action.tab };
+        const newState = { ...state, activeTab: action.tab };
+        console.log('🔄 GameReducer: Tab changed to:', action.tab, 'New state:', newState);
+        return newState;
       }
+      console.log('🔄 GameReducer: Tab change ignored - not in main screen. Current screen:', state.screen);
       return state;
     case 'CHALLENGE_SELECT':
       if (state.screen === "main") {
@@ -215,38 +218,47 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [leaderboard, setLeaderboard] = React.useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = React.useState(false);
 
   // Initialize data and check for saved session on mount
   useEffect(() => {
-    initializeApp();
-  }, []);
+    // Only initialize once
+    if (!isInitialized) {
+      initializeApp();
+    }
+  }, [isInitialized]);
 
   const initializeApp = async () => {
     try {
       setLoading(true);
+      console.log('🚀 GameContext: Starting app initialization...');
       
       // Check for existing authentication
       const savedUserData = await AsyncStorage.getItem('user_data');
       const savedWalletAddress = await AsyncStorage.getItem('wallet_address');
       
       if (savedUserData && savedWalletAddress) {
-        console.log('Found saved session, restoring user...');
+        console.log('📱 GameContext: Found saved session, restoring user...');
         const userData = JSON.parse(savedUserData);
         setUser(userData);
         dispatch({ type: 'RESTORE_SESSION', address: savedWalletAddress });
         
         // Load user's data
         await loadUserData();
-        return; // Skip the normal flow
+        console.log('✅ GameContext: Session restored successfully');
+      } else {
+        // No saved session, continue with normal app flow
+        console.log('🆕 GameContext: No saved session found, starting normal flow');
+        await loadInitialData();
       }
       
-      // No saved session, continue with normal app flow
-      console.log('No saved session found, starting normal flow');
-      await loadInitialData();
+      setIsInitialized(true);
+      console.log('🎯 GameContext: App initialization complete');
       
     } catch (error) {
-      console.error('Error during app initialization:', error);
+      console.error('❌ GameContext: Error during app initialization:', error);
       await loadInitialData(); // Fallback to normal flow
+      setIsInitialized(true);
     } finally {
       setLoading(false);
     }
@@ -390,6 +402,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const handleTabChange = (tab: string) => {
+    console.log('🔄 GameContext: Tab change requested:', tab);
     dispatch({ type: 'TAB_CHANGE', tab });
   };
 
@@ -403,16 +416,21 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   const handleDisconnectWallet = async () => {
     try {
+      console.log('🔓 GameContext: Starting wallet disconnect...');
+      
       // Clear stored authentication data
       await AsyncStorage.removeItem('user_data');
       await AsyncStorage.removeItem('wallet_address');
       await AsyncStorage.removeItem('auth_token');
-      console.log('Cleared cached authentication data');
+      console.log('🗑️ GameContext: Cleared cached authentication data');
       
       setUser(null);
+      setIsInitialized(false); // Allow re-initialization
       dispatch({ type: 'DISCONNECT_WALLET' });
+      
+      console.log('✅ GameContext: Wallet disconnected successfully');
     } catch (error) {
-      console.warn('Failed to clear authentication data:', error);
+      console.warn('❌ GameContext: Failed to clear authentication data:', error);
       dispatch({ type: 'DISCONNECT_WALLET' });
     }
   };

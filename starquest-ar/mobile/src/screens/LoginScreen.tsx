@@ -59,11 +59,9 @@ export const LoginScreen: React.FC = () => {
       }),
     ]).start();
     
-    // Disconnect any existing connections on mount to ensure clean state
-    if (isConnected) {
-      console.log('Found existing wallet connection, disconnecting for fresh start...');
-      disconnect();
-    }
+    // Only disconnect if user explicitly wants to start fresh
+    // Don't auto-disconnect on normal navigation to login screen
+    console.log('🔐 LoginScreen: Mounted with connection state:', { isConnected, address });
   }, []);
 
   const connectWallet = async () => {
