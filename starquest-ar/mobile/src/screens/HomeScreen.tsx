@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useAccount, useBalance, useEnsName } from 'wagmi';
+import { useWallet } from '../context/WalletContext';
 import { useGame } from '../context/GameContext';
 import { MobileLayout } from '../components/layout/MobileLayout';
 import { NeoButton } from '../components/ui/NeoButton';
@@ -22,16 +22,17 @@ const { width } = Dimensions.get('window');
 
 export const HomeScreen: React.FC = () => {
   const { user, stars, quests, handleTabChange, handleChallengeSelect } = useGame();
-  const { address, isConnected, chain } = useAccount();
-  const { data: balance, isLoading: balanceLoading } = useBalance({ address });
-  const { data: ensName, isLoading: ensLoading } = useEnsName({ address });
+  const { walletState, formatAddress, getNetworkName } = useWallet();
+  
+  // Destructure wallet state
+  const { isConnected, address, balance, chainId } = walletState;
 
   const completedStars = stars.filter((star) => star.status === 'completed').length;
   const totalStars = stars.length;
   const completedQuests = quests.filter((quest) => quest.completed).length;
   const totalQuests = quests.length;
 
-  console.log('🏠 HomeScreen: Wallet data', { isConnected, hasBalance: !!balance, ensName });
+  console.log('🏠 HomeScreen: Wallet data', { isConnected, hasBalance: !!balance, chainId });
 
   const quickActions = [
     {
@@ -90,7 +91,7 @@ export const HomeScreen: React.FC = () => {
           <View style={styles.heroContent}>
             <Text style={styles.heroTitle}>Welcome back!</Text>
             <Text style={styles.heroSubtitle}>
-              {ensLoading ? 'Loading...' : ensName || user?.username || 'StarHunter'}
+              {user?.username || 'StarHunter'}
             </Text>
             <Text style={styles.heroDescription}>
               Ready for your next cosmic adventure?
@@ -100,18 +101,16 @@ export const HomeScreen: React.FC = () => {
             {isConnected && address && (
               <View style={styles.walletInfo}>
                 <Text style={styles.walletAddress}>
-                  {address.slice(0, 6)}...{address.slice(-4)}
+                  {formatAddress(address)}
                 </Text>
-                {balanceLoading ? (
-                  <ActivityIndicator size="small" color={colors.foreground} style={styles.balanceLoader} />
-                ) : balance ? (
+                {balance && (
                   <Text style={styles.walletBalance}>
-                    {parseFloat(balance.formatted).toFixed(4)} {balance.symbol}
+                    {balance} ETH
                   </Text>
-                ) : null}
-                {chain && (
+                )}
+                {chainId && (
                   <Text style={styles.networkInfo}>
-                    🔗 Connected to {chain.name}
+                    🔗 Connected to {getNetworkName(chainId)}
                   </Text>
                 )}
               </View>

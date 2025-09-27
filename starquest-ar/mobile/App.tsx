@@ -1,13 +1,12 @@
+import 'react-native-get-random-values';
 import React, { Suspense, lazy } from "react";
 import { View, Text, StyleSheet, StatusBar } from "react-native";
-import { WagmiProvider } from 'wagmi';
-import { QueryClientProvider } from '@tanstack/react-query';
 import { GameProvider, useGame } from "./src/context/GameContext";
+import { WalletProvider } from "./src/context/WalletContext";
 import { ErrorBoundary } from "./src/components/ErrorBoundary";
 import { Preloader } from "./src/components/Preloader";
 import { BottomNav } from "./src/components/layout/BottomNav";
 import { colors } from "./src/utils/colors";
-import { wagmiConfig, queryClient, initializeAppKit, AppKit } from './src/config/walletConfig';
 
 // Lazy load screens with named exports
 const LandingScreen = lazy(() => import("./src/screens/LandingScreen").then(m => ({ default: m.LandingScreen })));
@@ -167,17 +166,12 @@ const AppContent: React.FC = () => {
           tabs={tabs}
         />
       )}
-      <AppKit />
     </View>
   );
 };
 
-// Main App component with conditional wallet providers
+// Main App component with WalletProvider
 const App: React.FC = () => {
-  // Initialize AppKit before rendering
-  React.useEffect(() => {
-    initializeAppKit();
-  }, []);
 
   // Add global error handler
   React.useEffect(() => {
@@ -208,13 +202,11 @@ const App: React.FC = () => {
 
   return (
     <ErrorBoundary>
-      <WagmiProvider config={wagmiConfig}>
-        <QueryClientProvider client={queryClient}>
-          <GameProvider>
-            <AppContentWrapper />
-          </GameProvider>
-        </QueryClientProvider>
-      </WagmiProvider>
+      <WalletProvider>
+        <GameProvider>
+          <AppContentWrapper />
+        </GameProvider>
+      </WalletProvider>
     </ErrorBoundary>
   );
 };

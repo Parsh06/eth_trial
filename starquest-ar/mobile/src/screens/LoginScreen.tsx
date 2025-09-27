@@ -14,11 +14,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
 
-// Web3 imports - now enabled with AppKit
-import { useAccount, useSignMessage, useDisconnect } from 'wagmi';
-import { useAppKit, AppKitButton } from '@reown/appkit-wagmi-react-native';
-
 import { useGame } from '../context/GameContext';
+import { useWallet } from '../context/WalletContext';
 
 // Get screen dimensions
 const { width } = Dimensions.get('window');
@@ -29,11 +26,10 @@ import { typography } from '../utils/typography';
 
 export const LoginScreen: React.FC = () => {
   const { handleWalletConnect, loading, error } = useGame();
-  const { open } = useAppKit();
-  // Enable wagmi hooks for wallet connection
-  const { address, isConnected } = useAccount();
-  const { signMessageAsync } = useSignMessage();
-  const { disconnect } = useDisconnect();
+  const { walletState, connect, disconnect, isLoading } = useWallet();
+  
+  // Destructure wallet state
+  const { isConnected, address } = walletState;
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('');
   const [fadeAnim] = useState(new Animated.Value(0));
@@ -67,7 +63,7 @@ export const LoginScreen: React.FC = () => {
   const connectWallet = async () => {
     try {
       setIsConnecting(true);
-      setConnectionStatus('Opening wallet connection...');
+      setConnectionStatus('Connecting wallet...');
       
       // Mark that user initiated this connection
       userInitiatedConnectionRef.current = true;
@@ -76,14 +72,18 @@ export const LoginScreen: React.FC = () => {
       hasAuthenticatedRef.current = false;
       currentAddressRef.current = null;
       
-      // Use AppKit to open the modal
-      open();
+      // Use our wallet service to connect
+      const success = await connect();
+      
+      if (!success) {
+        throw new Error('Failed to connect wallet');
+      }
       
     } catch (error: any) {
       console.error('Wallet connection error:', error);
       setConnectionStatus('');
       userInitiatedConnectionRef.current = false;
-      Alert.alert('Connection Failed', 'Failed to open wallet connection. Please try again.');
+      Alert.alert('Connection Failed', 'Failed to connect wallet. Please try again.');
     } finally {
       setIsConnecting(false);
     }
@@ -110,20 +110,11 @@ export const LoginScreen: React.FC = () => {
         currentAddressRef.current = address;
         
         setIsConnecting(true);
-        setConnectionStatus('Requesting signature for authentication...');
-    
-        // Sign a message for authentication
-        const message = `Welcome to StarQuest AR!\n\nPlease sign this message to authenticate your wallet.\n\nWallet: ${address}\nTimestamp: ${Date.now()}`;
-        const signature = await signMessageAsync({ 
-          account: address as `0x${string}`,
-          message 
-        });
-    
-        // Connect to the app with signature and message
         setConnectionStatus('Authenticating with StarQuest...');
-        console.log('🚀 Calling handleWalletConnect with:', { address, hasSignature: !!signature });
         
-        await handleWalletConnect(address, signature, message);
+        console.log('🚀 Calling handleWalletConnect with:', { address });
+        
+        await handleWalletConnect(address);
         
         console.log('✅ handleWalletConnect completed successfully');
         setConnectionStatus('Welcome to StarQuest AR! 🌟');
@@ -161,7 +152,7 @@ export const LoginScreen: React.FC = () => {
     if (isConnected && address) {
       authenticateWallet();
     }
-  }, [isConnected, address, signMessageAsync]);
+  }, [isConnected, address, handleWalletConnect]);
 
   // Reset authentication state when address changes or disconnects
   useEffect(() => {
