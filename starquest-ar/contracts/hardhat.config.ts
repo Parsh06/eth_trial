@@ -1,7 +1,6 @@
 import { HardhatUserConfig } from "hardhat/config";
-import "@nomicfoundation/hardhat-toolbox";
-import "@nomicfoundation/hardhat-ethers";
-import "@nomicfoundation/hardhat-chai-matchers";
+import "@nomiclabs/hardhat-ethers";
+import "@nomiclabs/hardhat-waffle";
 import "@typechain/hardhat";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
@@ -49,7 +48,7 @@ const config: HardhatUserConfig = {
   },
   typechain: {
     outDir: "typechain-types",
-    target: "ethers-v6",
+    target: "ethers-v5",
   },
   paths: {
     sources: "./contracts",
