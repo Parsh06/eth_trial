@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, ReactNode, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppState, User, Star, Challenge, Quest, LeaderboardEntry, GameContextType } from '../types';
 import apiService from '../services/api';
@@ -149,20 +149,36 @@ type GameAction =
   | { type: 'CHALLENGE_SELECT'; id: string }
   | { type: 'CHALLENGE_COMPLETE'; success: boolean }
   | { type: 'DISCONNECT_WALLET' }
-  | { type: 'QR_SCAN'; data: string };
+  | { type: 'QR_SCAN'; data: string }
+  | { type: 'RESTORE_SESSION'; address: string };
 
 const initialState: AppState = { screen: "preloader" };
 
 function gameReducer(state: AppState, action: GameAction): AppState {
+  console.log('🔄 GameReducer: Action received:', action.type, action);
+  console.log('🔄 GameReducer: Current state:', state);
+  
   switch (action.type) {
     case 'PRELOADER_COMPLETE':
-      return { screen: "landing" };
+      const landingState = { screen: "landing" as const };
+      console.log('🔄 GameReducer: Returning landing state:', landingState);
+      return landingState;
     case 'LANDING_COMPLETE':
-      return { screen: "login" };
+      const loginState = { screen: "login" as const };
+      console.log('🔄 GameReducer: Returning login state:', loginState);
+      return loginState;
     case 'ONBOARDING_COMPLETE':
-      return { screen: "wallet-connect" };
+      const walletConnectState = { screen: "wallet-connect" as const };
+      console.log('🔄 GameReducer: Returning wallet-connect state:', walletConnectState);
+      return walletConnectState;
     case 'WALLET_CONNECT':
-      return { screen: "main", activeTab: "home", walletAddress: action.address };
+      const mainState = { screen: "main" as const, activeTab: "home", walletAddress: action.address };
+      console.log('🔄 GameReducer: Returning main state:', mainState);
+      return mainState;
+    case 'RESTORE_SESSION':
+      const restoreState = { screen: "main" as const, activeTab: "home", walletAddress: action.address };
+      console.log('🔄 GameReducer: Returning restore state:', restoreState);
+      return restoreState;
     case 'TAB_CHANGE':
       if (state.screen === "main") {
         return { ...state, activeTab: action.tab };
@@ -200,40 +216,81 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  // Initialize data on mount
+  // Initialize data and check for saved session on mount
   useEffect(() => {
-    loadInitialData();
+    initializeApp();
   }, []);
+
+  const initializeApp = async () => {
+    try {
+      setLoading(true);
+      
+      // Check for existing authentication
+      const savedUserData = await AsyncStorage.getItem('user_data');
+      const savedWalletAddress = await AsyncStorage.getItem('wallet_address');
+      
+      if (savedUserData && savedWalletAddress) {
+        console.log('Found saved session, restoring user...');
+        const userData = JSON.parse(savedUserData);
+        setUser(userData);
+        dispatch({ type: 'RESTORE_SESSION', address: savedWalletAddress });
+        
+        // Load user's data
+        await loadUserData();
+        return; // Skip the normal flow
+      }
+      
+      // No saved session, continue with normal app flow
+      console.log('No saved session found, starting normal flow');
+      await loadInitialData();
+      
+    } catch (error) {
+      console.error('Error during app initialization:', error);
+      await loadInitialData(); // Fallback to normal flow
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const loadInitialData = async () => {
     try {
-      setLoading(true);
-      // Load user profile if authenticated
-      const userProfile = await apiService.getUserProfile();
-      if (userProfile.success) {
-        setUser(userProfile.user);
-      }
-      
-      // Load initial data
+      // Load initial data without authentication
       const [starsData, questsData, leaderboardData] = await Promise.all([
-        apiService.getStars(),
-        apiService.getQuests(),
-        apiService.getLeaderboard('stars'),
+        apiService.getStars().catch(() => ({ stars: mockStars })),
+        apiService.getQuests().catch(() => ({ quests: mockQuests })),
+        apiService.getLeaderboard('stars').catch(() => ({ leaderboard: mockLeaderboard })),
       ]);
       
-      setStars(starsData.stars || []);
-      setQuests(questsData.quests || []);
-      setLeaderboard(leaderboardData.leaderboard || []);
+      setStars(starsData.stars || mockStars);
+      setQuests(questsData.quests || mockQuests);
+      setLeaderboard(leaderboardData.leaderboard || mockLeaderboard);
     } catch (error) {
       console.error('Error loading initial data:', error);
-      setError('Failed to load data');
       // Fallback to mock data
-      setUser(mockUser);
       setStars(mockStars);
       setQuests(mockQuests);
       setLeaderboard(mockLeaderboard);
-    } finally {
-      setLoading(false);
+    }
+  };
+
+  const loadUserData = async () => {
+    try {
+      // Load user-specific data
+      const [starsData, questsData, leaderboardData] = await Promise.all([
+        apiService.getStars().catch(() => ({ stars: mockStars })),
+        apiService.getQuests().catch(() => ({ quests: mockQuests })),
+        apiService.getLeaderboard('stars').catch(() => ({ leaderboard: mockLeaderboard })),
+      ]);
+      
+      setStars(starsData.stars || mockStars);
+      setQuests(questsData.quests || mockQuests);
+      setLeaderboard(leaderboardData.leaderboard || mockLeaderboard);
+    } catch (error) {
+      console.error('Error loading user data:', error);
+      // Fallback to mock data
+      setStars(mockStars);
+      setQuests(mockQuests);
+      setLeaderboard(mockLeaderboard);
     }
   };
 
@@ -250,7 +307,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'ONBOARDING_COMPLETE' });
   };
 
-  const handleWalletConnect = async (address: string, signature?: string, message?: string) => {
+  const handleWalletConnect = useCallback(async (address: string, signature?: string, message?: string) => {
     try {
       setLoading(true);
       setError(null);
@@ -284,7 +341,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
           throw new Error('Authentication failed');
         }
       } catch (apiError) {
-        console.log('Backend authentication failed, using mock data:', apiError.message);
+        console.log('Backend authentication failed, using mock data:', apiError);
         // Fallback to mock data if backend is not available
         userData = {
           id: 'user-' + Date.now(),
@@ -301,8 +358,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
       }
       
       setUser(userData);
-      console.log('Wallet connected successfully, navigating to home...');
-      dispatch({ type: 'WALLET_CONNECT', address });
+      console.log('🎯 GameContext: Setting user data and dispatching WALLET_CONNECT');
+      console.log('🎯 GameContext: User data:', userData);
+      console.log('🎯 GameContext: About to dispatch WALLET_CONNECT with address:', address);
       
       // Store user data in AsyncStorage for persistence
       try {
@@ -313,13 +371,23 @@ export function GameProvider({ children }: { children: ReactNode }) {
         console.warn('Failed to store user data:', storageError);
       }
       
+      // Set loading to false BEFORE dispatching to allow navigation
+      setLoading(false);
+      
+      // Dispatch navigation change
+      dispatch({ type: 'WALLET_CONNECT', address });
+      
+      console.log('🎯 GameContext: WALLET_CONNECT dispatch completed');
+      
+      // Load user-specific data in background
+      loadUserData().catch(err => console.warn('Failed to load user data:', err));
+      
     } catch (error) {
       console.error('Wallet connect error:', error);
       setError('Failed to connect wallet. Please try again.');
-    } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const handleTabChange = (tab: string) => {
     dispatch({ type: 'TAB_CHANGE', tab });
