@@ -49,13 +49,14 @@ const slides: OnboardingSlide[] = [
 
 export const OnboardingScreen: React.FC = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const { handleOnboardingComplete } = useGame();
+  const { handleOnboardingComplete, handleTabChange } = useGame();
 
   const handleNext = () => {
     if (currentSlide < slides.length - 1) {
       setCurrentSlide(currentSlide + 1);
     } else {
-      handleOnboardingComplete();
+      // Route directly to AR instead of completing onboarding
+      handleTabChange("bulletproof-ar");
     }
   };
 

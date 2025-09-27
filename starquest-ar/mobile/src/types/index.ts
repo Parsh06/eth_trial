@@ -72,7 +72,10 @@ export type AppState =
   | { screen: "wallet-connect" }
   | { screen: "main"; activeTab: string; walletAddress?: string }
   | { screen: "challenge"; challengeId?: string; walletAddress?: string }
-  | { screen: "reward"; rewardData?: any; walletAddress?: string };
+  | { screen: "reward"; rewardData?: any; walletAddress?: string }
+  | { screen: "ar"; questId?: string; starId?: string }
+  | { screen: "ar-test" }
+  | { screen: "bulletproof-ar" };
 
 export interface GameContextType {
   state: AppState;

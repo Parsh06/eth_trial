@@ -14,6 +14,9 @@ import { LeaderboardScreen } from "./src/screens/LeaderboardScreen";
 import { ProfileScreen } from "./src/screens/ProfileScreen";
 import { ChallengeScreen } from "./src/screens/ChallengeScreen";
 import { RewardScreen } from "./src/screens/RewardScreen";
+import { ARScreen } from "./src/screens/ARScreen";
+import { SimpleARTest } from "./src/components/SimpleARTest";
+import { BulletproofAR } from "./src/components/BulletproofAR";
 import { BottomNav } from "./src/components/layout/BottomNav";
 import { colors } from "./src/utils/colors";
 
@@ -60,6 +63,12 @@ const AppContent: React.FC = () => {
         return <ChallengeScreen />;
       case "reward":
         return <RewardScreen />;
+      case "ar":
+        return <ARScreen onBack={() => handleTabChange("home")} />;
+      case "ar-test":
+        return <SimpleARTest onBack={() => handleTabChange("home")} />;
+      case "bulletproof-ar":
+        return <BulletproofAR onBack={() => handleTabChange("home")} />;
       case "main":
         return renderMainScreen();
       default:

@@ -19,7 +19,7 @@ import { typography } from '../utils/typography';
 const { width, height } = Dimensions.get('window');
 
 export const LandingScreen: React.FC = () => {
-  const { handleLandingComplete } = useGame();
+  const { handleLandingComplete, handleTabChange } = useGame();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
@@ -191,8 +191,8 @@ export const LandingScreen: React.FC = () => {
             Join thousands of explorers and start collecting stars today!
           </Text>
           <NeoButton
-            title="Get Started Now"
-            onPress={handleLandingComplete}
+            title="🌟 Start AR Adventure"
+            onPress={() => handleTabChange("bulletproof-ar")}
             variant="gradient"
             gradient={[colors.electricPurple, colors.electricPink]}
             size="large"

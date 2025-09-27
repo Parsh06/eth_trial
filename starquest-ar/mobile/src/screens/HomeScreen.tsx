@@ -28,32 +28,32 @@ export const HomeScreen: React.FC = () => {
 
   const quickActions = [
     {
+      title: 'AR Explorer',
+      description: 'Find stars in AR',
+      icon: '🌟',
+      gradient: [colors.electricPurple, colors.electricPink],
+      onPress: () => handleTabChange('bulletproof-ar'),
+    },
+    {
       title: 'Explore Map',
       description: 'Find new stars',
       icon: '🗺️',
-      gradient: [colors.electricPurple, colors.electricPink],
+      gradient: [colors.electricGreen, colors.electricCyan],
       onPress: () => handleTabChange('map'),
     },
     {
       title: 'View Quests',
       description: 'Complete challenges',
       icon: '⚔️',
-      gradient: [colors.electricGreen, colors.electricCyan],
+      gradient: [colors.electricOrange, colors.electricYellow],
       onPress: () => handleTabChange('quests'),
     },
     {
       title: 'Leaderboard',
       description: 'See rankings',
       icon: '🏆',
-      gradient: [colors.electricOrange, colors.electricYellow],
-      onPress: () => handleTabChange('leaderboard'),
-    },
-    {
-      title: 'Profile',
-      description: 'View stats',
-      icon: '👤',
       gradient: [colors.electricBlue, colors.electricPurple],
-      onPress: () => handleTabChange('profile'),
+      onPress: () => handleTabChange('leaderboard'),
     },
   ];
 
@@ -230,14 +230,24 @@ export const HomeScreen: React.FC = () => {
               A legendary star has been discovered in your area. 
               Use AR to find it and claim exclusive rewards!
             </Text>
-            <NeoButton
-              title="Find Star"
-              onPress={() => handleTabChange('map')}
-              variant="gradient"
-              gradient={[colors.electricPurple, colors.electricPink]}
-              size="medium"
-              style={styles.featuredButton}
-            />
+            <View style={styles.featuredButtons}>
+              <NeoButton
+                title="Find Star"
+                onPress={() => handleTabChange('map')}
+                variant="gradient"
+                gradient={[colors.electricPurple, colors.electricPink]}
+                size="medium"
+                style={[styles.featuredButton, { marginRight: 8 }]}
+              />
+              <NeoButton
+                title="Test AR"
+                onPress={() => handleTabChange('ar-test')}
+                variant="gradient"
+                gradient={[colors.electricGreen, colors.electricCyan]}
+                size="medium"
+                style={[styles.featuredButton, { marginLeft: 8 }]}
+              />
+            </View>
           </NeoCard>
         </View>
 
@@ -482,8 +492,12 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     lineHeight: 22,
   },
+  featuredButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
   featuredButton: {
-    width: '100%',
+    flex: 1,
   },
   bottomSpacing: {
     height: 100,
