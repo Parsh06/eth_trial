@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,12 @@ import { NeoButton } from '../components/ui/NeoButton';
 import { NeoCard } from '../components/ui/NeoCard';
 import { OpenStreetMapView } from '../components/OpenStreetMapView';
 import { LocationDebugger } from '../components/LocationDebugger';
+import { GameInvitationPopup } from '../components/GameInvitationPopup';
+import { StakingScreen } from './StakingScreen';
+import { MathGameScreen } from './MathGameScreen';
+import { GameResultScreen } from './GameResultScreen';
+import { ProximityService, ProximityTarget, ProximityEvent } from '../services/ProximityService';
+import { generateRandomLocations } from '../utils/distance';
 import { colors } from '../utils/colors';
 import { typography } from '../utils/typography';
 import { Star } from '../types';
@@ -22,11 +28,20 @@ const { width } = Dimensions.get('window');
 const GRID_SIZE = 3;
 const CELL_SIZE = (width - 60) / GRID_SIZE;
 
+type GameState = 'map' | 'invitation' | 'staking' | 'playing' | 'result';
+
 export const MapScreen: React.FC = () => {
   const { stars, handleChallengeSelect } = useGame();
   const [selectedStar, setSelectedStar] = useState<Star | null>(null);
   const [showMapView, setShowMapView] = useState(true);
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  
+  // Game flow state
+  const [gameState, setGameState] = useState<GameState>('map');
+  const [currentTarget, setCurrentTarget] = useState<ProximityTarget | null>(null);
+  const [proximityDistance, setProximityDistance] = useState(0);
+  const [gameResult, setGameResult] = useState<{ isWinner: boolean; score: number } | null>(null);
+  const [randomTargets, setRandomTargets] = useState<ProximityTarget[]>([]);
 
   const getStarColor = (status: Star['status']) => {
     switch (status) {
@@ -122,6 +137,65 @@ export const MapScreen: React.FC = () => {
     },
   })) : [];
 
+  // Proximity event handler
+  const handleProximityEvent = useCallback((event: ProximityEvent) => {
+    console.log('🎯 MapScreen: Proximity event:', event);
+    
+    if (event.isEntering && gameState === 'map') {
+      console.log('🎮 MapScreen: Entering game zone, showing invitation popup');
+      setCurrentTarget(event.target);
+      setProximityDistance(event.distance);
+      setGameState('invitation');
+    } else if (!event.isEntering && gameState === 'invitation') {
+      console.log('👋 MapScreen: Left game zone, hiding invitation popup');
+      setGameState('map');
+      setCurrentTarget(null);
+    }
+  }, [gameState]);
+
+  // Initialize proximity service and random targets
+  useEffect(() => {
+    if (userLocation && randomTargets.length === 0) {
+      console.log('🎯 MapScreen: Generating random game targets around user location');
+      
+      // Generate 3-5 random game locations within 2km radius
+      const locations = generateRandomLocations(userLocation, 5, 2000);
+      
+      const targets: ProximityTarget[] = locations.map(location => ({
+        id: location.id,
+        name: location.name,
+        coordinates: { latitude: location.latitude, longitude: location.longitude },
+        radius: 1.5, // 1.5 meter radius
+        isActive: true,
+      }));
+      
+      setRandomTargets(targets);
+      
+      // Add targets to proximity service
+      targets.forEach(target => {
+        ProximityService.addTarget(target);
+      });
+      
+      // Add proximity callback
+      ProximityService.addCallback(handleProximityEvent);
+      
+      // Start tracking
+      ProximityService.startTracking();
+      
+      console.log('🎯 MapScreen: Added', targets.length, 'proximity targets');
+    }
+    
+    return () => {
+      if (randomTargets.length > 0) {
+        ProximityService.stopTracking();
+        ProximityService.removeCallback(handleProximityEvent);
+        randomTargets.forEach(target => {
+          ProximityService.removeTarget(target.id);
+        });
+      }
+    };
+  }, [userLocation, randomTargets.length, handleProximityEvent]);
+
   const handleLocationChange = (location: { latitude: number; longitude: number }) => {
     console.log('🗺️ MapScreen: Location changed:', location);
     console.log('📊 MapScreen: Previous location:', userLocation);
@@ -137,8 +211,98 @@ export const MapScreen: React.FC = () => {
     }
     
     setUserLocation(location);
+    
+    // Update proximity service with new location
+    if (location) {
+      ProximityService.updateLocation(location);
+    }
+    
     console.log('⭐ Generated map stars around location:', mapStars.length);
   };
+
+  // Game flow handlers
+  const handleStakeToPlay = () => {
+    console.log('💰 MapScreen: User chose to stake and play');
+    setGameState('staking');
+  };
+
+  const handleIgnoreGame = () => {
+    console.log('🚫 MapScreen: User chose to ignore game');
+    setGameState('map');
+    setCurrentTarget(null);
+  };
+
+  const handleStakingComplete = () => {
+    console.log('✅ MapScreen: Staking complete, starting game');
+    setGameState('playing');
+  };
+
+  const handleGameComplete = (isWinner: boolean, score: number) => {
+    console.log('🎮 MapScreen: Game complete:', { isWinner, score });
+    setGameResult({ isWinner, score });
+    setGameState('result');
+  };
+
+  const handleBackToMap = () => {
+    console.log('🗺️ MapScreen: Returning to map');
+    setGameState('map');
+    setCurrentTarget(null);
+    setGameResult(null);
+  };
+
+  const handlePlayAgain = () => {
+    console.log('🔄 MapScreen: Playing again');
+    setGameState('staking');
+  };
+
+  // Render different screens based on game state
+  if (gameState === 'staking' && currentTarget) {
+    return (
+      <StakingScreen
+        onStakingComplete={handleStakingComplete}
+        stakeAmount="0.01 ETH"
+        targetName={currentTarget.name}
+      />
+    );
+  }
+
+  if (gameState === 'playing' && currentTarget) {
+    return (
+      <MathGameScreen
+        onGameComplete={handleGameComplete}
+        stakeAmount="0.01 ETH"
+        targetName={currentTarget.name}
+      />
+    );
+  }
+
+  if (gameState === 'result' && gameResult && currentTarget) {
+    return (
+      <GameResultScreen
+        isWinner={gameResult.isWinner}
+        score={gameResult.score}
+        stakeAmount="0.01 ETH"
+        rewardAmount="0.02 ETH"
+        targetName={currentTarget.name}
+        onBackToMap={handleBackToMap}
+        onPlayAgain={handlePlayAgain}
+      />
+    );
+  }
+
+  // Combine existing stars with random game targets for map display
+  const allMapStars = userLocation ? [
+    ...mapStars,
+    ...randomTargets.map(target => ({
+      id: target.id,
+      name: target.name,
+      status: 'available' as const,
+      position: {
+        latitude: target.coordinates.latitude,
+        longitude: target.coordinates.longitude,
+      },
+    }))
+  ] : [];
 
   return (
     <MobileLayout>
@@ -171,7 +335,7 @@ export const MapScreen: React.FC = () => {
             <OpenStreetMapView
               onLocationChange={handleLocationChange}
               showStars={true}
-              stars={mapStars}
+              stars={allMapStars}
             />
           </View>
         ) : (
@@ -223,13 +387,13 @@ export const MapScreen: React.FC = () => {
             </View>
 
             {selectedStar.status === 'available' && (
-              <NeoButton
-                title="Start Challenge"
-                onPress={handleStartChallenge}
-                variant="electric"
-                size="lg"
-                style={styles.challengeButton}
-              />
+                <NeoButton
+                  title="Start Challenge"
+                  onPress={handleStartChallenge}
+                  variant="electric"
+                  size="large"
+                  style={styles.challengeButton}
+                />
             )}
 
             {selectedStar.status === 'completed' && (
@@ -269,6 +433,16 @@ export const MapScreen: React.FC = () => {
         
         {/* Location Debugger */}
         <LocationDebugger />
+        
+        {/* Game Invitation Popup */}
+        <GameInvitationPopup
+          visible={gameState === 'invitation'}
+          target={currentTarget}
+          distance={proximityDistance}
+          onStakeToPlay={handleStakeToPlay}
+          onIgnore={handleIgnoreGame}
+          onClose={handleIgnoreGame}
+        />
       </View>
     </MobileLayout>
   );
