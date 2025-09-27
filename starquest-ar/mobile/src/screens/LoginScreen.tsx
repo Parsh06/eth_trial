@@ -3,25 +3,28 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   Alert,
   Dimensions,
   Animated,
+  TouchableOpacity,
+  ScrollView,
   ActivityIndicator,
-  Platform,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useAppKit } from '@reown/appkit-wagmi-react-native';
-import { useAccount, useSignMessage } from 'wagmi';
-import { useGame } from '../context/GameContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useFocusEffect } from '@react-navigation/native';
+
+// Web3 imports
+import { useAccount, useConnect, useSignMessage } from 'wagmi';
+import { injected } from 'wagmi/connectors';
+
+import { useGame } from '../context/GameContext';
 import { NeoButton } from '../components/ui/NeoButton';
 import { NeoCard } from '../components/ui/NeoCard';
 import { colors } from '../utils/colors';
 import { typography } from '../utils/typography';
-import { metaMaskService, WalletInfo } from '../services/MetaMaskService';
-
-const { width } = Dimensions.get('window');
+import { metaMaskService } from '../services/MetaMaskService';
+import { WalletDetectionService, WalletConnectionOption } from '../services/WalletDetectionService';
 
 export const LoginScreen: React.FC = () => {
   const { handleWalletConnect, loading, error } = useGame();
@@ -31,10 +34,12 @@ export const LoginScreen: React.FC = () => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('');
   const [fadeAnim] = useState(new Animated.Value(0));
-  const [slideAnim] = useState(new Animated.Value(50));
+  const [slideAnim] = useState(new Animated.Value(30));
+  const [availableWallets, setAvailableWallets] = useState<WalletConnectionOption[]>([]);
+  const [isDetectingWallets, setIsDetectingWallets] = useState(false);
 
   useEffect(() => {
-    // Animate in
+    // Animation on mount
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -43,11 +48,32 @@ export const LoginScreen: React.FC = () => {
       }),
       Animated.timing(slideAnim, {
         toValue: 0,
-        duration: 800,
+        duration: 600,
         useNativeDriver: true,
       }),
     ]).start();
+
+    // Detect available wallets
+    detectAvailableWallets();
   }, []);
+
+  const detectAvailableWallets = async () => {
+    try {
+      setIsDetectingWallets(true);
+      const walletOptions = await WalletDetectionService.getWalletConnectionOptions(
+        async (walletId: string, address: string) => {
+          console.log(`Wallet ${walletId} connected with address:`, address);
+          await handleWalletConnect(address);
+        }
+      );
+      setAvailableWallets(walletOptions);
+      console.log('Detected wallets:', walletOptions.map(w => ({ name: w.name, installed: w.isInstalled })));
+    } catch (error) {
+      console.error('Failed to detect wallets:', error);
+    } finally {
+      setIsDetectingWallets(false);
+    }
+  };
 
   const connectMetaMask = async () => {
     try {
@@ -111,18 +137,78 @@ export const LoginScreen: React.FC = () => {
     }
   }, [isConnected, address, signMessageAsync, handleWalletConnect]);
 
+  const connectDetectedWallet = async (wallet: WalletConnectionOption) => {
+    try {
+      setIsConnecting(true);
+      setConnectionStatus(`Connecting to ${wallet.name}...`);
+      
+      if (!wallet.isInstalled) {
+        Alert.alert(
+          `${wallet.name} Not Installed`,
+          `${wallet.name} is not installed on this device. Would you like to install it?`,
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Install',
+              onPress: async () => {
+                try {
+                  await WalletDetectionService.openWalletStore(wallet.packageName);
+                } catch (error) {
+                  Alert.alert('Error', 'Failed to open app store');
+                }
+              }
+            }
+          ]
+        );
+        return;
+      }
+      
+      await wallet.connectFunction();
+      
+    } catch (error: any) {
+      console.error(`${wallet.name} connection error:`, error);
+      setConnectionStatus('');
+      
+      let errorMessage = `Failed to connect to ${wallet.name}. Please try again.`;
+      if (error.message.includes('User rejected')) {
+        errorMessage = 'Connection was cancelled. Please try again.';
+      }
+      
+      Alert.alert('Connection Failed', errorMessage);
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
   const connectWalletConnect = async () => {
     try {
       setIsConnecting(true);
       
-      // For now, use MetaMask as fallback for WalletConnect
-      // In a real implementation, you would use WalletConnect SDK
+      // Show available wallets using WalletConnect protocol
+      const installedWallets = availableWallets.filter(w => w.isInstalled);
+      
+      if (installedWallets.length === 0) {
+        Alert.alert(
+          'No Wallets Found',
+          'No compatible wallets are installed on this device. Please install a wallet app first.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'View Options', onPress: () => detectAvailableWallets() }
+          ]
+        );
+        return;
+      }
+      
+      // For now, show MetaMask connection as fallback
       Alert.alert(
         'WalletConnect',
-        'WalletConnect integration is coming soon! For now, please use MetaMask.',
+        'WalletConnect integration is coming soon! For now, please use one of the installed wallets directly.',
         [
           { text: 'Cancel', style: 'cancel' },
-          { text: 'Use MetaMask', style: 'default', onPress: connectMetaMask }
+          { text: 'Show Wallets', style: 'default', onPress: () => {
+            // Scroll to wallet list or highlight available wallets
+            console.log('Available wallets:', installedWallets.map(w => w.name));
+          }}
         ]
       );
       
@@ -135,7 +221,7 @@ export const LoginScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
       <Animated.View
         style={[
           styles.content,
@@ -153,47 +239,103 @@ export const LoginScreen: React.FC = () => {
           </Text>
         </View>
 
-        {/* Wallet Options */}
-        <View style={styles.walletOptions}>
-          <NeoCard style={styles.walletCard}>
-            <View style={styles.walletHeader}>
-              <Text style={styles.walletIcon}>🦊</Text>
-              <Text style={styles.walletTitle}>MetaMask</Text>
-            </View>
-            <Text style={styles.walletDescription}>
-              Connect using your MetaMask wallet to access all features
-            </Text>
-            <NeoButton
-              title={isConnecting || loading ? 
-                (connectionStatus ? 'Connecting...' : 'Connecting...') : 
-                'Connect MetaMask'
-              }
-              onPress={connectMetaMask}
-              variant="gradient"
-              gradient={[colors.electricPurple, colors.electricPink]}
-              size="large"
-              disabled={isConnecting || loading}
-              style={styles.connectButton}
-            />
+        {/* Wallet Detection Status */}
+        {isDetectingWallets && (
+          <NeoCard style={styles.statusCard}>
+            <Text style={styles.statusText}>Detecting installed wallets...</Text>
           </NeoCard>
+        )}
 
-          <NeoCard style={styles.walletCard}>
-            <View style={styles.walletHeader}>
-              <Text style={styles.walletIcon}>🔗</Text>
-              <Text style={styles.walletTitle}>WalletConnect</Text>
-            </View>
-            <Text style={styles.walletDescription}>
-              Connect using WalletConnect for mobile wallet support
-            </Text>
-            <NeoButton
-              title={isConnecting ? 'Connecting...' : 'Connect Wallet'}
-              onPress={connectWalletConnect}
-              variant="outline"
-              size="large"
-              disabled={isConnecting || loading}
-              style={styles.connectButton}
-            />
+        {/* Connection Status */}
+        {connectionStatus ? (
+          <NeoCard style={styles.statusCard}>
+            <Text style={styles.statusText}>{connectionStatus}</Text>
           </NeoCard>
+        ) : null}
+
+        {/* Detected Wallets */}
+        <ScrollView style={styles.walletScrollView} showsVerticalScrollIndicator={false}>
+          <View style={styles.walletOptions}>
+            {availableWallets.length > 0 ? (
+              availableWallets.map((wallet, index) => (
+                <NeoCard key={wallet.id} style={[
+                  styles.walletCard,
+                  wallet.isInstalled && styles.installedWalletCard
+                ]}>
+                  <View style={styles.walletHeader}>
+                    <Text style={styles.walletIcon}>{wallet.icon}</Text>
+                    <View style={styles.walletTitleContainer}>
+                      <Text style={styles.walletTitle}>{wallet.name}</Text>
+                      {wallet.isInstalled && (
+                        <Text style={styles.installedBadge}>✓ Installed</Text>
+                      )}
+                    </View>
+                  </View>
+                  <Text style={styles.walletDescription}>
+                    {wallet.isInstalled 
+                      ? `Connect using your ${wallet.name} wallet` 
+                      : `${wallet.name} is not installed on this device`
+                    }
+                  </Text>
+                  <NeoButton
+                    title={isConnecting ? 'Connecting...' : 
+                           wallet.isInstalled ? `Connect ${wallet.name}` : `Install ${wallet.name}`
+                    }
+                    onPress={() => connectDetectedWallet(wallet)}
+                    variant={wallet.isInstalled ? 'gradient' : 'outline'}
+                    gradient={wallet.isInstalled ? [colors.electricPurple, colors.electricPink] : undefined}
+                    size="large"
+                    disabled={isConnecting || loading}
+                    style={styles.connectButton}
+                  />
+                </NeoCard>
+              ))
+            ) : (
+              // Fallback to original MetaMask and WalletConnect options
+              <>
+                <NeoCard style={styles.walletCard}>
+                  <View style={styles.walletHeader}>
+                    <Text style={styles.walletIcon}>🦊</Text>
+                    <Text style={styles.walletTitle}>MetaMask</Text>
+                  </View>
+                  <Text style={styles.walletDescription}>
+                    Connect using your MetaMask wallet to access all features
+                  </Text>
+                  <NeoButton
+                    title={isConnecting || loading ? 
+                      (connectionStatus ? 'Connecting...' : 'Connecting...') : 
+                      'Connect MetaMask'
+                    }
+                    onPress={connectMetaMask}
+                    variant="gradient"
+                    gradient={[colors.electricPurple, colors.electricPink]}
+                    size="large"
+                    disabled={isConnecting || loading}
+                    style={styles.connectButton}
+                  />
+                </NeoCard>
+
+                <NeoCard style={styles.walletCard}>
+                  <View style={styles.walletHeader}>
+                    <Text style={styles.walletIcon}>🔗</Text>
+                    <Text style={styles.walletTitle}>WalletConnect</Text>
+                  </View>
+                  <Text style={styles.walletDescription}>
+                    Connect using WalletConnect for mobile wallet support
+                  </Text>
+                  <NeoButton
+                    title={isConnecting ? 'Connecting...' : 'Connect Wallet'}
+                    onPress={connectWalletConnect}
+                    variant="outline"
+                    size="large"
+                    disabled={isConnecting || loading}
+                    style={styles.connectButton}
+                  />
+                </NeoCard>
+              </>
+            )}
+          </View>
+        </ScrollView>
 
           {/* Demo Mode Card - for development */}
           {__DEV__ && (
@@ -294,7 +436,7 @@ export const LoginScreen: React.FC = () => {
           </NeoCard>
         )}
       </Animated.View>
-    </View>
+    </ScrollView>
   );
 };
 
@@ -302,7 +444,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  contentContainer: {
     paddingTop: 60,
+    paddingBottom: 40,
   },
   content: {
     flex: 1,
@@ -361,6 +506,36 @@ const styles = StyleSheet.create({
   },
   connectButton: {
     width: '100%',
+  },
+  statusCard: {
+    backgroundColor: colors.muted,
+    borderColor: colors.border,
+    borderWidth: 2,
+    padding: 16,
+    marginBottom: 16,
+  },
+  statusText: {
+    ...typography.body,
+    color: colors.mutedForeground,
+    textAlign: 'center',
+  },
+  walletScrollView: {
+    flexGrow: 0,
+    maxHeight: 400,
+  },
+  installedWalletCard: {
+    borderColor: colors.electricGreen,
+    backgroundColor: colors.electricGreen + '05',
+    shadowColor: colors.electricGreen,
+  },
+  walletTitleContainer: {
+    flex: 1,
+  },
+  installedBadge: {
+    ...typography.bodySmall,
+    color: colors.electricGreen,
+    fontWeight: '600',
+    marginTop: 4,
   },
   demoCard: {
     borderColor: colors.electricGreen,
