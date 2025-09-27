@@ -4,10 +4,9 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
   Dimensions,
   Animated,
-  ImageBackground,
+  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useGame } from '../context/GameContext';
@@ -22,25 +21,25 @@ export const LandingScreen: React.FC = () => {
   const { handleLandingComplete } = useGame();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
-  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  const scaleAnim = useRef(new Animated.Value(0.85)).current;
 
   useEffect(() => {
-    // Animate in
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 1000,
+        duration: 900,
         useNativeDriver: true,
       }),
-      Animated.timing(slideAnim, {
+      Animated.spring(slideAnim, {
         toValue: 0,
-        duration: 1000,
+        damping: 12,
+        stiffness: 100,
         useNativeDriver: true,
       }),
       Animated.spring(scaleAnim, {
         toValue: 1,
-        tension: 50,
-        friction: 8,
+        damping: 10,
+        stiffness: 80,
         useNativeDriver: true,
       }),
     ]).start();
@@ -102,12 +101,10 @@ export const LandingScreen: React.FC = () => {
           ]}
         >
           <Text style={styles.heroTitle}>🌟 StarQuest AR</Text>
-          <Text style={styles.heroSubtitle}>
-            Your Cosmic Adventure Awaits
-          </Text>
+          <Text style={styles.heroSubtitle}>Your Cosmic Adventure Awaits</Text>
           <Text style={styles.heroDescription}>
-            Discover, collect, and trade rare stars in augmented reality. 
-            Join thousands of explorers in the ultimate space adventure!
+            Discover, collect, and trade rare stars in augmented reality. Join thousands of
+            explorers in the ultimate space adventure!
           </Text>
         </Animated.View>
       </LinearGradient>
@@ -145,41 +142,21 @@ export const LandingScreen: React.FC = () => {
       <View style={styles.howItWorksSection}>
         <Text style={styles.sectionTitle}>How It Works</Text>
         <View style={styles.stepsContainer}>
-          <NeoCard style={styles.stepCard}>
-            <View style={styles.stepNumber}>
-              <Text style={styles.stepNumberText}>1</Text>
-            </View>
-            <View style={styles.stepContent}>
-              <Text style={styles.stepTitle}>Connect Your Wallet</Text>
-              <Text style={styles.stepDescription}>
-                Link your MetaMask wallet to start your journey
-              </Text>
-            </View>
-          </NeoCard>
-
-          <NeoCard style={styles.stepCard}>
-            <View style={styles.stepNumber}>
-              <Text style={styles.stepNumberText}>2</Text>
-            </View>
-            <View style={styles.stepContent}>
-              <Text style={styles.stepTitle}>Explore the Map</Text>
-              <Text style={styles.stepDescription}>
-                Use AR to find and collect stars in your area
-              </Text>
-            </View>
-          </NeoCard>
-
-          <NeoCard style={styles.stepCard}>
-            <View style={styles.stepNumber}>
-              <Text style={styles.stepNumberText}>3</Text>
-            </View>
-            <View style={styles.stepContent}>
-              <Text style={styles.stepTitle}>Earn Rewards</Text>
-              <Text style={styles.stepDescription}>
-                Complete quests and earn exclusive NFTs
-              </Text>
-            </View>
-          </NeoCard>
+          {[
+            { step: '1', title: 'Connect Your Wallet', desc: 'Link your MetaMask wallet to start your journey' },
+            { step: '2', title: 'Explore the Map', desc: 'Use AR to find and collect stars in your area' },
+            { step: '3', title: 'Earn Rewards', desc: 'Complete quests and earn exclusive NFTs' },
+          ].map((item, idx) => (
+            <NeoCard key={idx} style={styles.stepCard}>
+              <View style={styles.stepNumber}>
+                <Text style={styles.stepNumberText}>{item.step}</Text>
+              </View>
+              <View style={styles.stepContent}>
+                <Text style={styles.stepTitle}>{item.title}</Text>
+                <Text style={styles.stepDescription}>{item.desc}</Text>
+              </View>
+            </NeoCard>
+          ))}
         </View>
       </View>
 
@@ -191,7 +168,7 @@ export const LandingScreen: React.FC = () => {
             Join thousands of explorers and start collecting stars today!
           </Text>
           <NeoButton
-            title="Get Started Now"
+            title="🚀 Get Started Now"
             onPress={handleLandingComplete}
             variant="gradient"
             gradient={[colors.electricPurple, colors.electricPink]}
@@ -203,15 +180,25 @@ export const LandingScreen: React.FC = () => {
 
       {/* Footer */}
       <View style={styles.footer}>
-        <Text style={styles.footerText}>
-          Built with ❤️ for the cosmic community
-        </Text>
-        <Text style={styles.footerSubtext}>
-          StarQuest AR • 2024
-        </Text>
+        <Text style={styles.footerText}>Built with ❤️ for the cosmic community</Text>
+        <Text style={styles.footerSubtext}>StarQuest AR • 2024</Text>
       </View>
     </ScrollView>
   );
+};
+
+const shadowStyle = {
+  ...Platform.select({
+    ios: {
+      shadowColor: '#000',
+      shadowOffset: { width: 4, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 6,
+    },
+    android: {
+      elevation: 8,
+    },
+  }),
 };
 
 const styles = StyleSheet.create({
@@ -233,25 +220,22 @@ const styles = StyleSheet.create({
   },
   heroTitle: {
     ...typography.brutalLarge,
-    color: '#FFFFFF',
+    color: '#fff',
     textAlign: 'center',
     marginBottom: 16,
-    textShadow: '0px 4px 8px rgba(0, 0, 0, 0.3)',
   },
   heroSubtitle: {
     ...typography.heading1,
-    color: '#FFFFFF',
+    color: '#fff',
     textAlign: 'center',
     marginBottom: 20,
-    textShadow: '0px 2px 4px rgba(0, 0, 0, 0.3)',
   },
   heroDescription: {
     ...typography.body,
-    color: '#FFFFFF',
+    color: '#fff',
     textAlign: 'center',
     lineHeight: 24,
     opacity: 0.9,
-    textShadow: '0px 1px 2px rgba(0, 0, 0, 0.3)',
   },
   statsSection: {
     padding: 20,
@@ -276,6 +260,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderWidth: 3,
     borderColor: colors.foreground,
+    ...shadowStyle,
   },
   statNumber: {
     ...typography.brutalMedium,
@@ -299,8 +284,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderWidth: 3,
     borderColor: colors.foreground,
-    boxShadow: '6px 6px 0px ' + colors.foreground,
-    elevation: 8,
+    ...shadowStyle,
   },
   featureIconContainer: {
     width: 60,
@@ -339,6 +323,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderWidth: 3,
     borderColor: colors.foreground,
+    ...shadowStyle,
   },
   stepNumber: {
     width: 50,
@@ -353,7 +338,7 @@ const styles = StyleSheet.create({
   },
   stepNumberText: {
     ...typography.heading2,
-    color: '#FFFFFF',
+    color: '#fff',
     fontWeight: '900',
   },
   stepContent: {
@@ -378,8 +363,7 @@ const styles = StyleSheet.create({
     borderWidth: 4,
     borderColor: colors.foreground,
     alignItems: 'center',
-    boxShadow: '8px 8px 0px ' + colors.foreground,
-    elevation: 12,
+    ...shadowStyle,
   },
   ctaTitle: {
     ...typography.heading1,

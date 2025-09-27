@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
   Share,
   Alert,
 } from 'react-native';
@@ -18,7 +17,6 @@ import { typography } from '../utils/typography';
 export const RewardScreen: React.FC = () => {
   const { handleTabChange } = useGame();
 
-  // Mock reward data
   const rewardData = {
     nftId: 'nft-3',
     name: 'Gamma Star NFT',
@@ -30,7 +28,8 @@ export const RewardScreen: React.FC = () => {
       { trait: 'Element', value: 'Cosmic' },
       { trait: 'Generation', value: '1' },
     ],
-    description: 'A rare cosmic star collected from the depths of space. This NFT represents your achievement in completing the Gamma Star challenge.',
+    description:
+      'A rare cosmic star collected from the depths of space. This NFT represents your achievement in completing the Gamma Star challenge.',
     blockchain: 'Ethereum',
     contractAddress: '0x1234...5678',
     tokenId: '0003',
@@ -38,25 +37,16 @@ export const RewardScreen: React.FC = () => {
 
   const getRarityColor = (rarity: string) => {
     switch (rarity.toLowerCase()) {
-      case 'legendary':
-        return colors.electricOrange;
-      case 'epic':
-        return colors.electricPurple;
-      case 'rare':
-        return colors.info;
-      case 'common':
-        return colors.mutedForeground;
-      default:
-        return colors.foreground;
+      case 'legendary': return colors.electricOrange;
+      case 'epic': return colors.electricPurple;
+      case 'rare': return colors.info;
+      case 'common': return colors.mutedForeground;
+      default: return colors.foreground;
     }
   };
 
   const handleViewInWallet = () => {
-    Alert.alert(
-      'View in Wallet',
-      'This would open your connected wallet to view the NFT',
-      [{ text: 'OK' }]
-    );
+    Alert.alert('View in Wallet', 'This would open your connected wallet to view the NFT', [{ text: 'OK' }]);
   };
 
   const handleShare = async () => {
@@ -77,20 +67,20 @@ export const RewardScreen: React.FC = () => {
   return (
     <MobileLayout>
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        {/* Success Header */}
+        {/* Header */}
         <View style={styles.header}>
           <Text style={styles.successText}>🎉 Congratulations!</Text>
           <Text style={styles.subtitle}>You've earned a new NFT!</Text>
         </View>
 
-        {/* NFT Display */}
+        {/* NFT Card */}
         <NeoCard style={styles.nftCard}>
           <View style={styles.nftImageContainer}>
             <View style={[styles.nftImage, { backgroundColor: getRarityColor(rewardData.rarity) }]}>
               <Text style={styles.nftImageText}>🌟</Text>
             </View>
           </View>
-          
+
           <View style={styles.nftInfo}>
             <Text style={styles.nftName}>{rewardData.name}</Text>
             <View style={[styles.rarityBadge, { backgroundColor: getRarityColor(rewardData.rarity) }]}>
@@ -102,7 +92,7 @@ export const RewardScreen: React.FC = () => {
         {/* NFT Details */}
         <NeoCard style={styles.detailsCard}>
           <Text style={styles.sectionTitle}>NFT Details</Text>
-          
+
           <View style={styles.detailItem}>
             <Text style={styles.detailLabel}>Description</Text>
             <Text style={styles.detailValue}>{rewardData.description}</Text>
@@ -162,23 +152,21 @@ export const RewardScreen: React.FC = () => {
             title="View in Wallet"
             onPress={handleViewInWallet}
             variant="electric"
-            size="lg"
+            size="large"
             style={styles.actionButton}
           />
-          
           <NeoButton
             title="Share Achievement"
             onPress={handleShare}
             variant="outline"
-            size="lg"
+            size="large"
             style={styles.actionButton}
           />
-          
           <NeoButton
             title="Continue Exploring"
             onPress={handleContinue}
             variant="default"
-            size="lg"
+            size="large"
             style={styles.actionButton}
           />
         </View>
@@ -188,31 +176,12 @@ export const RewardScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 32,
-  },
-  successText: {
-    ...typography.brutalLarge,
-    color: colors.foreground,
-    marginBottom: 8,
-  },
-  subtitle: {
-    ...typography.body,
-    color: colors.mutedForeground,
-  },
-  nftCard: {
-    alignItems: 'center',
-    marginBottom: 24,
-    padding: 24,
-  },
-  nftImageContainer: {
-    marginBottom: 16,
-  },
+  container: { flex: 1, padding: 20 },
+  header: { alignItems: 'center', marginBottom: 32 },
+  successText: { ...typography.brutalLarge, color: colors.foreground, marginBottom: 8 },
+  subtitle: { ...typography.body, color: colors.mutedForeground },
+  nftCard: { alignItems: 'center', marginBottom: 24, padding: 24 },
+  nftImageContainer: { marginBottom: 16 },
   nftImage: {
     width: 200,
     height: 200,
@@ -221,21 +190,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 4,
     borderColor: colors.foreground,
-    boxShadow: '4px 4px 0px ' + colors.foreground,
-    elevation: 4,
+    shadowColor: colors.foreground,
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 0.8,
+    shadowRadius: 0,
+    elevation: 6,
   },
-  nftImageText: {
-    fontSize: 80,
-  },
-  nftInfo: {
-    alignItems: 'center',
-  },
-  nftName: {
-    ...typography.brutalMedium,
-    color: colors.foreground,
-    marginBottom: 12,
-    textAlign: 'center',
-  },
+  nftImageText: { fontSize: 80 },
+  nftInfo: { alignItems: 'center' },
+  nftName: { ...typography.brutalMedium, color: colors.foreground, marginBottom: 12, textAlign: 'center' },
   rarityBadge: {
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -243,40 +206,14 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.foreground,
   },
-  rarityText: {
-    ...typography.caption,
-    color: colors.primaryForeground,
-    fontWeight: '700',
-  },
-  detailsCard: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    ...typography.brutalSmall,
-    color: colors.foreground,
-    marginBottom: 16,
-  },
-  detailItem: {
-    marginBottom: 12,
-  },
-  detailLabel: {
-    ...typography.body,
-    color: colors.mutedForeground,
-    marginBottom: 4,
-    fontWeight: '600',
-  },
-  detailValue: {
-    ...typography.body,
-    color: colors.foreground,
-  },
-  attributesCard: {
-    marginBottom: 24,
-  },
-  attributesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
+  rarityText: { ...typography.caption, color: colors.primaryForeground, fontWeight: '700' },
+  detailsCard: { marginBottom: 24 },
+  sectionTitle: { ...typography.brutalSmall, color: colors.foreground, marginBottom: 16 },
+  detailItem: { marginBottom: 12 },
+  detailLabel: { ...typography.body, color: colors.mutedForeground, marginBottom: 4, fontWeight: '600' },
+  detailValue: { ...typography.body, color: colors.foreground },
+  attributesCard: { marginBottom: 24 },
+  attributesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   attributeItem: {
     flex: 1,
     minWidth: '45%',
@@ -287,41 +224,13 @@ const styles = StyleSheet.create({
     borderColor: colors.foreground,
     alignItems: 'center',
   },
-  attributeTrait: {
-    ...typography.caption,
-    color: colors.mutedForeground,
-    marginBottom: 4,
-  },
-  attributeValue: {
-    ...typography.body,
-    color: colors.foreground,
-    fontWeight: '700',
-  },
-  blockchainCard: {
-    marginBottom: 24,
-  },
-  blockchainInfo: {
-    gap: 12,
-  },
-  blockchainItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  blockchainLabel: {
-    ...typography.body,
-    color: colors.mutedForeground,
-  },
-  blockchainValue: {
-    ...typography.body,
-    color: colors.foreground,
-    fontWeight: '600',
-  },
-  actionContainer: {
-    gap: 12,
-    marginBottom: 24,
-  },
-  actionButton: {
-    marginBottom: 8,
-  },
+  attributeTrait: { ...typography.caption, color: colors.mutedForeground, marginBottom: 4 },
+  attributeValue: { ...typography.body, color: colors.foreground, fontWeight: '700' },
+  blockchainCard: { marginBottom: 24 },
+  blockchainInfo: { gap: 12 },
+  blockchainItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  blockchainLabel: { ...typography.body, color: colors.mutedForeground },
+  blockchainValue: { ...typography.body, color: colors.foreground, fontWeight: '600' },
+  actionContainer: { gap: 12, marginBottom: 24 },
+  actionButton: { marginBottom: 8 },
 });

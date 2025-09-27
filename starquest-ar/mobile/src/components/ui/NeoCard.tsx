@@ -1,14 +1,21 @@
-import React from 'react';
-import { View, TouchableOpacity, ViewStyle } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { colors } from '../../utils/colors';
+import React from "react";
+import {
+  View,
+  TouchableOpacity,
+  ViewStyle,
+  StyleProp,
+  StyleSheet,
+  ColorValue,
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { colors } from "../../utils/colors";
 
 interface NeoCardProps {
   children: React.ReactNode;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   onPress?: () => void;
-  variant?: 'default' | 'elevated' | 'outlined' | 'gradient';
-  gradient?: string[];
+  variant?: "default" | "elevated" | "outlined" | "gradient";
+  gradient?: [ColorValue, ColorValue, ...ColorValue[]]; // ✅ enforce tuple
   [key: string]: any;
 }
 
@@ -16,63 +23,54 @@ export const NeoCard: React.FC<NeoCardProps> = ({
   children,
   style,
   onPress,
-  variant = 'default',
+  variant = "default",
   gradient,
   ...props
 }) => {
-  const getCardStyle = (): ViewStyle => {
-    const baseStyle: ViewStyle = {
-      borderRadius: 20,
-      borderWidth: 2,
-      borderColor: colors.cardBorder,
-      backgroundColor: colors.card,
-      padding: 24,
-      marginVertical: 12,
-      boxShadow: '0px 8px 16px rgba(0, 0, 0, 0.25)',
-      elevation: 12,
-      minHeight: 80,
-    };
-
-    const variantStyles: Record<string, ViewStyle> = {
-      default: {
-        backgroundColor: colors.card,
-        borderColor: colors.border,
-      },
-      elevated: {
-        backgroundColor: colors.card,
-        boxShadow: '0px 8px 12px ' + colors.foreground + '26',
-        elevation: 8,
-      },
-      outlined: {
-        backgroundColor: 'transparent',
-        borderWidth: 2,
-        borderColor: colors.border,
-        boxShadow: 'none',
-        elevation: 0,
-      },
-      gradient: {
-        backgroundColor: 'transparent',
-        borderWidth: 0,
-        boxShadow: 'none',
-        elevation: 0,
-      },
-    };
-
-    return {
-      ...baseStyle,
-      ...variantStyles[variant],
-      ...style,
-    };
+  const baseStyle: ViewStyle = {
+    borderRadius: 20,
+    borderWidth: 3,
+    borderColor: colors.cardBorder,
+    backgroundColor: colors.card,
+    padding: 20,
+    marginVertical: 12,
+    minHeight: 80,
   };
 
+  const variantStyles: Record<string, ViewStyle> = {
+    default: {
+      backgroundColor: colors.card,
+      borderColor: colors.border,
+      ...shadows.medium,
+    },
+    elevated: {
+      backgroundColor: colors.card,
+      borderColor: colors.foreground,
+      ...shadows.heavy,
+    },
+    outlined: {
+      backgroundColor: "transparent",
+      borderWidth: 3,
+      borderColor: colors.border,
+      ...shadows.none,
+    },
+    gradient: {
+      backgroundColor: "transparent",
+      borderWidth: 0,
+      ...shadows.none,
+    },
+  };
+
+  const cardStyle = [baseStyle, variantStyles[variant], style];
+
   const CardContent = () => {
-    if (variant === 'gradient' && gradient) {
+    if (variant === "gradient" && gradient) {
       return (
         <LinearGradient
           colors={gradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={getCardStyle()}
+          style={[baseStyle, { borderRadius: 20 }, style]}
         >
           {children}
         </LinearGradient>
@@ -82,7 +80,7 @@ export const NeoCard: React.FC<NeoCardProps> = ({
     if (onPress) {
       return (
         <TouchableOpacity
-          style={getCardStyle()}
+          style={cardStyle}
           onPress={onPress}
           activeOpacity={0.8}
           {...props}
@@ -93,7 +91,7 @@ export const NeoCard: React.FC<NeoCardProps> = ({
     }
 
     return (
-      <View style={getCardStyle()} {...props}>
+      <View style={cardStyle} {...props}>
         {children}
       </View>
     );
@@ -101,3 +99,27 @@ export const NeoCard: React.FC<NeoCardProps> = ({
 
   return <CardContent />;
 };
+
+// ---------- Shadow Presets ----------
+const shadows = StyleSheet.create({
+  none: {
+    shadowColor: "transparent",
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
+  },
+  medium: {
+    shadowColor: "#000",
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 6,
+  },
+  heavy: {
+    shadowColor: "#000",
+    shadowOffset: { width: 6, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 10,
+  },
+});

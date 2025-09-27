@@ -16,14 +16,14 @@ import { ProgressBar } from '../components/ui/ProgressBar';
 import { colors } from '../utils/colors';
 import { typography } from '../utils/typography';
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 export const HomeScreen: React.FC = () => {
   const { user, stars, quests, handleTabChange, handleChallengeSelect } = useGame();
 
-  const completedStars = stars.filter(star => star.status === 'completed').length;
+  const completedStars = stars.filter((star) => star.status === 'completed').length;
   const totalStars = stars.length;
-  const completedQuests = quests.filter(quest => quest.completed).length;
+  const completedQuests = quests.filter((quest) => quest.completed).length;
   const totalQuests = quests.length;
 
   const quickActions = [
@@ -198,7 +198,10 @@ export const HomeScreen: React.FC = () => {
             {achievements.map((achievement, index) => (
               <NeoCard
                 key={index}
-                style={{ ...styles.achievementCard, opacity: achievement.unlocked ? 1 : 0.5 }}
+                style={{
+                  ...styles.achievementCard,
+                  opacity: achievement.unlocked ? 1 : 0.5,
+                }}
               >
                 <Text style={styles.achievementIcon}>{achievement.icon}</Text>
                 <Text style={styles.achievementTitle}>{achievement.title}</Text>
@@ -227,8 +230,8 @@ export const HomeScreen: React.FC = () => {
           <NeoCard style={styles.featuredCard}>
             <Text style={styles.featuredTitle}>🌟 Rare Star Spotted!</Text>
             <Text style={styles.featuredDescription}>
-              A legendary star has been discovered in your area. 
-              Use AR to find it and claim exclusive rewards!
+              A legendary star has been discovered in your area. Use AR to find it
+              and claim exclusive rewards!
             </Text>
             <NeoButton
               title="Find Star"
@@ -241,7 +244,6 @@ export const HomeScreen: React.FC = () => {
           </NeoCard>
         </View>
 
-        {/* Bottom Spacing */}
         <View style={styles.bottomSpacing} />
       </ScrollView>
     </MobileLayout>
@@ -249,21 +251,15 @@ export const HomeScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
+  container: { flex: 1, backgroundColor: colors.background },
   heroSection: {
     margin: 20,
     borderRadius: 24,
     padding: 28,
     marginBottom: 24,
-    boxShadow: '0px 8px 16px rgba(0, 0, 0, 0.3)',
     elevation: 12,
   },
-  heroContent: {
-    alignItems: 'center',
-  },
+  heroContent: { alignItems: 'center' },
   heroTitle: {
     ...typography.heading1,
     color: '#FFFFFF',
@@ -291,7 +287,7 @@ const styles = StyleSheet.create({
     opacity: 0.8,
     marginTop: 12,
     fontFamily: 'monospace',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(255,255,255,0.1)',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
@@ -302,12 +298,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginBottom: 32,
   },
-  statCard: {
-    flex: 1,
-    alignItems: 'center',
-    padding: 20,
-    minHeight: 80,
-  },
+  statCard: { flex: 1, alignItems: 'center', padding: 20, minHeight: 80 },
   statValue: {
     ...typography.brutalMedium,
     color: colors.electricPurple,
@@ -319,10 +310,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: '600',
   },
-  section: {
-    marginBottom: 32,
-    paddingHorizontal: 20,
-  },
+  section: { marginBottom: 32, paddingHorizontal: 20 },
   sectionTitle: {
     ...typography.heading2,
     color: colors.foreground,
@@ -338,7 +326,6 @@ const styles = StyleSheet.create({
     width: (width - 72) / 2,
     borderRadius: 20,
     overflow: 'hidden',
-    boxShadow: '0px 8px 16px rgba(0, 0, 0, 0.3)',
     elevation: 12,
   },
   actionGradient: {
@@ -347,11 +334,7 @@ const styles = StyleSheet.create({
     minHeight: 120,
     justifyContent: 'center',
   },
-  actionIcon: {
-    fontSize: 36,
-    marginBottom: 12,
-    textAlign: 'center',
-  },
+  actionIcon: { fontSize: 36, marginBottom: 12, textAlign: 'center' },
   actionTitle: {
     ...typography.heading3,
     color: '#FFFFFF',
@@ -366,12 +349,8 @@ const styles = StyleSheet.create({
     opacity: 0.9,
     lineHeight: 20,
   },
-  progressCard: {
-    padding: 24,
-  },
-  progressItem: {
-    marginBottom: 20,
-  },
+  progressCard: { padding: 24 },
+  progressItem: { marginBottom: 20 },
   progressLabel: {
     ...typography.bodySmall,
     color: colors.mutedForeground,
@@ -384,21 +363,10 @@ const styles = StyleSheet.create({
     marginTop: 8,
     textAlign: 'center',
   },
-  challengeCard: {
-    padding: 24,
-  },
-  challengeHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  challengeIcon: {
-    fontSize: 32,
-    marginRight: 16,
-  },
-  challengeContent: {
-    flex: 1,
-  },
+  challengeCard: { padding: 24 },
+  challengeHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
+  challengeIcon: { fontSize: 32, marginRight: 16 },
+  challengeContent: { flex: 1 },
   challengeTitle: {
     ...typography.heading3,
     color: colors.foreground,
@@ -409,9 +377,7 @@ const styles = StyleSheet.create({
     color: colors.mutedForeground,
     lineHeight: 22,
   },
-  challengeButton: {
-    width: '100%',
-  },
+  challengeButton: { width: '100%' },
   achievementsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -423,12 +389,9 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: 'center',
     minHeight: 100,
+    marginBottom: 16,
   },
-  achievementIcon: {
-    fontSize: 32,
-    marginBottom: 12,
-    textAlign: 'center',
-  },
+  achievementIcon: { fontSize: 32, marginBottom: 12, textAlign: 'center' },
   achievementTitle: {
     ...typography.bodySmall,
     color: colors.foreground,
@@ -442,23 +405,15 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 16,
   },
-  activityIcon: {
-    fontSize: 28,
-    marginRight: 16,
-  },
-  activityContent: {
-    flex: 1,
-  },
+  activityIcon: { fontSize: 28, marginRight: 16 },
+  activityContent: { flex: 1 },
   activityTitle: {
     ...typography.body,
     color: colors.foreground,
     marginBottom: 4,
     fontWeight: '500',
   },
-  activityTime: {
-    ...typography.caption,
-    color: colors.mutedForeground,
-  },
+  activityTime: { ...typography.caption, color: colors.mutedForeground },
   featuredCard: {
     padding: 24,
     backgroundColor: colors.card,
@@ -476,10 +431,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     lineHeight: 22,
   },
-  featuredButton: {
-    width: '100%',
-  },
-  bottomSpacing: {
-    height: 100,
-  },
+  featuredButton: { width: '100%' },
+  bottomSpacing: { height: 100 },
 });

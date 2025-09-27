@@ -75,8 +75,6 @@ export const OpenStreetMapView: React.FC<OpenStreetMapViewProps> = ({
       // Get current position with high accuracy
       const currentLocation = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.BestForNavigation,
-        timeout: 15000,
-        maximumAge: 10000,
       });
 
       console.log('📍 Raw location data:', {
