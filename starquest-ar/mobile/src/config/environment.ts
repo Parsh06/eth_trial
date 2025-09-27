@@ -13,8 +13,8 @@ export const ENV = {
   CHAIN_ID: '1',
   
   // API Endpoints
-  API_BASE_URL: 'http://localhost:3001',
-  WEBSOCKET_URL: 'ws://localhost:3001',
+  API_BASE_URL: 'http://localhost:5000',
+  WEBSOCKET_URL: 'ws://localhost:5000',
   
   // MetaMask SDK Configuration
   METAMASK_SDK_CONFIG: {
