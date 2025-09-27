@@ -1,6 +1,3 @@
-import "react-native-get-random-values";
-import "react-native-url-polyfill/auto";
-import "@walletconnect/react-native-compat";
 import { mainnet, polygon, arbitrum } from "@wagmi/core/chains";
 import { QueryClient } from "@tanstack/react-query";
 import {

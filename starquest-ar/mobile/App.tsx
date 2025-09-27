@@ -1,3 +1,4 @@
+import './src/polyfills';
 import React from "react";
 import { View, Text, StyleSheet, StatusBar } from "react-native";
 import { WagmiProvider } from "wagmi";
