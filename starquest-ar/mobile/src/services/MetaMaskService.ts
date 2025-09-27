@@ -84,21 +84,55 @@ export class MetaMaskService {
       
       if (canOpen) {
         // Try to open MetaMask mobile app
-        console.log('MetaMask app detected, attempting deep link...');
+        console.log('MetaMask app detected, showing connection options...');
         
-        // For now, we'll simulate a successful connection
-        // In production, you'd use WalletConnect or MetaMask Mobile SDK
         return new Promise((resolve, reject) => {
-          setTimeout(() => {
-            // Generate a more realistic test address
-            const testAddress = '0x742d35Cc6834C0532925a3b8A9C9b0a4c0c5e1a4';
-            resolve({
-              address: testAddress,
-              balance: '1.2345',
-              chainId: '0x1', // Ethereum mainnet
-              isConnected: true,
-            });
-          }, 2000); // Simulate connection time
+          Alert.alert(
+            'Connect to MetaMask',
+            'Choose how you want to connect your wallet:',
+            [
+              {
+                text: 'Cancel',
+                style: 'cancel',
+                onPress: () => reject(new Error('User cancelled connection'))
+              },
+              {
+                text: 'Open MetaMask App',
+                onPress: async () => {
+                  try {
+                    // Try to open MetaMask app
+                    await Linking.openURL('metamask://connect');
+                    
+                    // Simulate waiting for user to complete connection in MetaMask
+                    setTimeout(() => {
+                      const testAddress = '0x742d35Cc6834C0532925a3b8A9C9b0a4c0c5e1a4';
+                      resolve({
+                        address: testAddress,
+                        balance: '1.2345',
+                        chainId: '0x1',
+                        isConnected: true,
+                      });
+                    }, 3000);
+                  } catch (linkError) {
+                    console.error('Failed to open MetaMask app:', linkError);
+                    reject(new Error('Failed to open MetaMask app'));
+                  }
+                }
+              },
+              {
+                text: 'Demo Connection',
+                onPress: () => {
+                  const demoAddress = '0x742d35Cc6834C0532925a3b8A9C9b0a4c0c5e1a4';
+                  resolve({
+                    address: demoAddress,
+                    balance: '2.5678',
+                    chainId: '0x1',
+                    isConnected: true,
+                  });
+                }
+              }
+            ]
+          );
         });
       } else {
         // MetaMask not installed, provide installation option

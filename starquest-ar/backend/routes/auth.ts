@@ -15,6 +15,13 @@ const router = express.Router();
 // Register/Login with wallet
 router.post('/wallet-login', async (req, res) => {
   try {
+    console.log('🔐 Wallet login attempt:', {
+      walletAddress: req.body.walletAddress,
+      hasSignature: !!req.body.signature,
+      hasMessage: !!req.body.message,
+      timestamp: new Date().toISOString()
+    });
+    
     const { walletAddress, signature, message } = req.body;
     
     if (!walletAddress) {

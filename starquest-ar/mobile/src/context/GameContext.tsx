@@ -328,8 +328,20 @@ export function GameProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'CHALLENGE_COMPLETE', success });
   };
 
-  const handleDisconnectWallet = () => {
-    dispatch({ type: 'DISCONNECT_WALLET' });
+  const handleDisconnectWallet = async () => {
+    try {
+      // Clear stored authentication data
+      await AsyncStorage.removeItem('user_data');
+      await AsyncStorage.removeItem('wallet_address');
+      await AsyncStorage.removeItem('auth_token');
+      console.log('Cleared cached authentication data');
+      
+      setUser(null);
+      dispatch({ type: 'DISCONNECT_WALLET' });
+    } catch (error) {
+      console.warn('Failed to clear authentication data:', error);
+      dispatch({ type: 'DISCONNECT_WALLET' });
+    }
   };
 
   const handleQRScan = (data: string) => {
