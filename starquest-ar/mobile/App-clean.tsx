@@ -20,7 +20,14 @@ const RewardScreen = lazy(() => import("./src/screens/RewardScreen").then(module
 
 // Main App component with GameProvider
 const AppContent: React.FC = () => {
-  const { state, loading, error, handleTabChange, handlePreloaderComplete, handleLandingComplete } = useGame();
+  const { state, loading, error, handleTabChange, handlePreloaderComplete } = useGame();
+
+  // Loading fallback component
+  const LoadingFallback = () => (
+    <View style={styles.loadingContainer}>
+      <Text style={styles.loadingText}>Loading...</Text>
+    </View>
+  );
 
   // Show loading state
   if (loading) {
@@ -34,21 +41,14 @@ const AppContent: React.FC = () => {
 
   // Show error state
   if (error) {
-  return (
+    return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>⚠️ Something went wrong</Text>
         <Text style={styles.errorSubtext}>{error}</Text>
         <Text style={styles.errorHint}>Please try restarting the app</Text>
-    </View>
-  );
+      </View>
+    );
   }
-
-  // Loading fallback component
-  const LoadingFallback = () => (
-    <View style={styles.loadingContainer}>
-      <Text style={styles.loadingText}>Loading...</Text>
-    </View>
-  );
 
   // Render screens based on state
   const renderScreen = () => {
@@ -168,20 +168,15 @@ const AppContent: React.FC = () => {
   );
 };
 
-// Main App component with conditional wallet providers
+// Main App component
 const App: React.FC = () => {
   return (
     <ErrorBoundary>
       <GameProvider>
-        <AppContentWrapper />
+        <AppContent />
       </GameProvider>
     </ErrorBoundary>
   );
-};
-
-// Simple wrapper without wallet dependencies
-const AppContentWrapper: React.FC = () => {
-  return <AppContent />;
 };
 
 const styles = StyleSheet.create({

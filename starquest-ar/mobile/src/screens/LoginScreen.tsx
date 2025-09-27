@@ -375,7 +375,7 @@ export const LoginScreen: React.FC = () => {
               />
             </NeoCard>
           )}
-        </View>
+        </Animated.View>
 
         {/* Debug Options - only in development */}
         {__DEV__ && (
@@ -435,7 +435,6 @@ export const LoginScreen: React.FC = () => {
             <Text style={styles.errorText}>⚠️ {error}</Text>
           </NeoCard>
         )}
-      </Animated.View>
     </ScrollView>
   );
 };

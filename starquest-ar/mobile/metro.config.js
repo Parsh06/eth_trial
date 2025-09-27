@@ -74,11 +74,4 @@ config.watchFolders = [];
 // Performance optimizations
 config.maxWorkers = Math.max(1, Math.floor(require('os').cpus().length * 0.8));
 
-// Exclude heavy modules from initial bundle
-config.resolver.blockList = [
-  /node_modules\/@noble\/hashes\/.*\.js$/,
-  /node_modules\/multiformats\/.*\.js$/,
-  /node_modules\/@walletconnect\/.*\/node_modules\/@noble\/.*\.js$/,
-];
-
 module.exports = config;
