@@ -231,9 +231,7 @@ const styles = StyleSheet.create({
   },
   starIcon: {
     fontSize: 80,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 4 },
-    textShadowRadius: 8,
+    textShadow: '0px 4px 8px rgba(0, 0, 0, 0.3)',
   },
   titleContainer: {
     alignItems: 'center',
@@ -244,18 +242,14 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     textAlign: 'center',
     marginBottom: 8,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
+    textShadow: '0px 2px 4px rgba(0, 0, 0, 0.3)',
   },
   subtitle: {
     ...typography.subheading,
     color: '#FFFFFF',
     textAlign: 'center',
     opacity: 0.9,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    textShadow: '0px 1px 2px rgba(0, 0, 0, 0.3)',
   },
   progressContainer: {
     width: width * 0.6,
@@ -275,10 +269,7 @@ const styles = StyleSheet.create({
     height: '100%',
     backgroundColor: '#FFFFFF',
     borderRadius: 3,
-    shadowColor: '#FFFFFF',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 4,
+    boxShadow: '0px 0px 4px rgba(255, 255, 255, 0.8)',
     elevation: 4,
   },
   loadingText: {
@@ -286,9 +277,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     textAlign: 'center',
     opacity: 0.8,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    textShadow: '0px 1px 2px rgba(0, 0, 0, 0.3)',
   },
   floatingStars: {
     position: 'absolute',
@@ -303,8 +292,6 @@ const styles = StyleSheet.create({
   floatingStarIcon: {
     fontSize: 20,
     opacity: 0.7,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
+    textShadow: '0px 2px 4px rgba(0, 0, 0, 0.3)',
   },
 });

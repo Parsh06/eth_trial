@@ -50,12 +50,12 @@ export const LoginScreen: React.FC = () => {
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 800,
-        useNativeDriver: true,
+        useNativeDriver: false,
       }),
       Animated.timing(slideAnim, {
         toValue: 0,
         duration: 600,
-        useNativeDriver: true,
+        useNativeDriver: false,
       }),
     ]).start();
 
@@ -487,10 +487,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderWidth: 4,
     borderColor: colors.foreground,
-    shadowColor: colors.foreground,
-    shadowOffset: { width: 6, height: 6 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
+    boxShadow: '6px 6px 0px ' + colors.foreground,
     elevation: 8,
   },
   walletHeader: {
@@ -534,7 +531,7 @@ const styles = StyleSheet.create({
   installedWalletCard: {
     borderColor: colors.electricGreen,
     backgroundColor: colors.electricGreen + '05',
-    shadowColor: colors.electricGreen,
+    boxShadow: '0px 0px 0px ' + colors.electricGreen,
   },
   walletTitleContainer: {
     flex: 1,

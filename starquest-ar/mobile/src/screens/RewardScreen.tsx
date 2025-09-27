@@ -221,10 +221,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 4,
     borderColor: colors.foreground,
-    shadowColor: colors.foreground,
-    shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
+    boxShadow: '4px 4px 0px ' + colors.foreground,
     elevation: 4,
   },
   nftImageText: {
