@@ -1,5 +1,9 @@
 import React from "react";
 import { View, Text, StyleSheet, StatusBar } from "react-native";
+import { WagmiProvider } from "wagmi";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { AppKit } from "@reown/appkit-wagmi-react-native";
+import { wagmiConfig, queryClient } from "./src/config/wagmi";
 import { GameProvider, useGame } from "./src/context/GameContext";
 import { ErrorBoundary } from "./src/components/ErrorBoundary";
 import { Preloader } from "./src/components/Preloader";
@@ -107,6 +111,7 @@ const AppContent: React.FC = () => {
           tabs={tabs}
         />
       )}
+      <AppKit />
     </View>
   );
 };
@@ -115,9 +120,13 @@ const AppContent: React.FC = () => {
 const App: React.FC = () => {
   return (
     <ErrorBoundary>
-      <GameProvider>
-        <AppContent />
-      </GameProvider>
+      <WagmiProvider config={wagmiConfig}>
+        <QueryClientProvider client={queryClient}>
+          <GameProvider>
+            <AppContent />
+          </GameProvider>
+        </QueryClientProvider>
+      </WagmiProvider>
     </ErrorBoundary>
   );
 };
