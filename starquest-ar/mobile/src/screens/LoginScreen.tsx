@@ -14,9 +14,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
 
-// Web3 imports
-import { useAccount, useConnect, useSignMessage } from 'wagmi';
-import { injected } from 'wagmi/connectors';
+// Web3 imports - temporarily disabled for performance
+// import { useAccount, useConnect, useSignMessage } from 'wagmi';
+// import { injected } from 'wagmi/connectors';
 
 import { useGame } from '../context/GameContext';
 import { NeoButton } from '../components/ui/NeoButton';
