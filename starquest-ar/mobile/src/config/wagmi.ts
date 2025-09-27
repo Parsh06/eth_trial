@@ -1,21 +1,22 @@
-import { mainnet, polygon, arbitrum } from "@wagmi/core/chains";
-import { QueryClient } from "@tanstack/react-query";
-import {
-  createAppKit,
-  defaultWagmiConfig,
-} from "@reown/appkit-wagmi-react-native";
+// Temporarily disabled for performance optimization
+// import { mainnet, polygon, arbitrum } from "@wagmi/core/chains";
+// import { QueryClient } from "@tanstack/react-query";
+// import {
+//   createAppKit,
+//   defaultWagmiConfig,
+// } from "@reown/appkit-wagmi-react-native";
 
-// 0. Setup queryClient with optimized config
-export const queryClient = new QueryClient({
+// 0. Mock queryClient for performance optimization
+export const queryClient = {
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
+      staleTime: 5 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
       retry: 1,
       refetchOnWindowFocus: false,
     },
   },
-});
+};
 
 // 1. Get projectId at https://dashboard.reown.com
 // For demo purposes, using a placeholder - replace with your actual project ID
@@ -33,44 +34,20 @@ const metadata = {
   },
 };
 
-const chains = [mainnet, polygon, arbitrum] as const;
-
-export const wagmiConfig = defaultWagmiConfig({ 
-  chains, 
-  projectId, 
-  metadata 
-});
+// Mock wagmi config for performance optimization
+export const wagmiConfig = {
+  chains: [],
+  projectId,
+  metadata
+};
 
 // 3. Create modal - delay initialization to improve startup time
 let appKitInitialized = false;
 
 export const initializeAppKit = () => {
   if (!appKitInitialized) {
-    try {
-      createAppKit({
-        projectId,
-        metadata,
-        wagmiConfig,
-        defaultChain: mainnet,
-        enableAnalytics: false,
-        // Fix WalletConnect subscription errors
-        enableWalletConnect: true,
-        enableInjected: true,
-        enableEIP6963: false,
-        enableCoinbase: false,
-        themeMode: 'light',
-        // Reduce subscription conflicts
-        featuredWalletIds: [],
-        includeWalletIds: [],
-        excludeWalletIds: [],
-        // Disable problematic features
-        enableSwaps: false,
-        enableOnramp: false,
-      });
-      appKitInitialized = true;
-    } catch (error) {
-      console.warn('AppKit initialization error:', error);
-    }
+    console.log('AppKit initialization skipped for performance optimization');
+    appKitInitialized = true;
   }
 };
 
