@@ -38,7 +38,8 @@
     "plugins": [
       "expo-camera",
       "expo-location",
-      "expo-barcode-scanner"
+      "expo-barcode-scanner",
+      "./queries.js"
     ],
     "scheme": "starquestar",
     "experiments": {
