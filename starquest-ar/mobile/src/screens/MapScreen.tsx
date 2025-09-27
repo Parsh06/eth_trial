@@ -6,11 +6,13 @@ import {
   TouchableOpacity,
   ScrollView,
   Dimensions,
+  Switch,
 } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { MobileLayout } from '../components/layout/MobileLayout';
 import { NeoButton } from '../components/ui/NeoButton';
 import { NeoCard } from '../components/ui/NeoCard';
+import { OpenStreetMapView } from '../components/OpenStreetMapView';
 import { colors } from '../utils/colors';
 import { typography } from '../utils/typography';
 import { Star } from '../types';
@@ -22,6 +24,8 @@ const CELL_SIZE = (width - 60) / GRID_SIZE;
 export const MapScreen: React.FC = () => {
   const { stars, handleChallengeSelect } = useGame();
   const [selectedStar, setSelectedStar] = useState<Star | null>(null);
+  const [showMapView, setShowMapView] = useState(true);
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
 
   const getStarColor = (status: Star['status']) => {
     switch (status) {
@@ -106,16 +110,57 @@ export const MapScreen: React.FC = () => {
     return grid;
   };
 
+  // Convert mock stars to map format with real coordinates around user location
+  const mapStars = userLocation ? stars.map((star, index) => ({
+    id: star.id,
+    name: star.name,
+    status: star.status,
+    position: {
+      latitude: userLocation.latitude + (Math.random() - 0.5) * 0.01, // Within ~500m radius
+      longitude: userLocation.longitude + (Math.random() - 0.5) * 0.01,
+    },
+  })) : [];
+
+  const handleLocationChange = (location: { latitude: number; longitude: number }) => {
+    setUserLocation(location);
+  };
+
   return (
     <MobileLayout>
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        {/* Header */}
+      <View style={styles.container}>
+        {/* Header with Toggle */}
         <View style={styles.header}>
-          <Text style={styles.title}>Star Map</Text>
-          <Text style={styles.subtitle}>
-            Discover and collect stars to earn amazing NFTs
-          </Text>
+          <View style={styles.headerContent}>
+            <View>
+              <Text style={styles.title}>Star Map</Text>
+              <Text style={styles.subtitle}>
+                {showMapView ? 'Your real-world location' : 'Grid view of available stars'}
+              </Text>
+            </View>
+            <View style={styles.viewToggle}>
+              <Text style={styles.toggleLabel}>Grid</Text>
+              <Switch
+                value={showMapView}
+                onValueChange={setShowMapView}
+                trackColor={{ false: colors.muted, true: colors.primary }}
+                thumbColor={showMapView ? colors.primaryForeground : colors.mutedForeground}
+              />
+              <Text style={styles.toggleLabel}>Map</Text>
+            </View>
+          </View>
         </View>
+
+        {/* Map or Grid View */}
+        {showMapView ? (
+          <View style={styles.mapContainer}>
+            <OpenStreetMapView
+              onLocationChange={handleLocationChange}
+              showStars={true}
+              stars={mapStars}
+            />
+          </View>
+        ) : (
+          <ScrollView style={styles.gridScrollView} showsVerticalScrollIndicator={false}>
 
         {/* Star Grid */}
         <View style={styles.gridContainer}>
@@ -186,25 +231,27 @@ export const MapScreen: React.FC = () => {
           </NeoCard>
         )}
 
-        {/* Legend */}
-        <NeoCard style={styles.legendCard}>
-          <Text style={styles.legendTitle}>Legend</Text>
-          <View style={styles.legendItems}>
-            <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: colors.starAvailable }]} />
-              <Text style={styles.legendText}>Available</Text>
-            </View>
-            <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: colors.starCompleted }]} />
-              <Text style={styles.legendText}>Completed</Text>
-            </View>
-            <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: colors.starLocked }]} />
-              <Text style={styles.legendText}>Locked</Text>
-            </View>
-          </View>
-        </NeoCard>
-      </ScrollView>
+            {/* Legend */}
+            <NeoCard style={styles.legendCard}>
+              <Text style={styles.legendTitle}>Legend</Text>
+              <View style={styles.legendItems}>
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: colors.starAvailable }]} />
+                  <Text style={styles.legendText}>Available</Text>
+                </View>
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: colors.starCompleted }]} />
+                  <Text style={styles.legendText}>Completed</Text>
+                </View>
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: colors.starLocked }]} />
+                  <Text style={styles.legendText}>Locked</Text>
+                </View>
+              </View>
+            </NeoCard>
+          </ScrollView>
+        )}
+      </View>
     </MobileLayout>
   );
 };
@@ -212,10 +259,42 @@ export const MapScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    backgroundColor: colors.background,
   },
   header: {
-    marginBottom: 24,
+    padding: 20,
+    paddingBottom: 16,
+    backgroundColor: colors.background,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  viewToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  toggleLabel: {
+    ...typography.caption,
+    color: colors.mutedForeground,
+    fontWeight: '600',
+  },
+  mapContainer: {
+    flex: 1,
+    backgroundColor: colors.card,
+    margin: 20,
+    marginTop: 0,
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: colors.border,
+  },
+  gridScrollView: {
+    flex: 1,
+    padding: 20,
+    paddingTop: 0,
   },
   title: {
     ...typography.brutalLarge,
