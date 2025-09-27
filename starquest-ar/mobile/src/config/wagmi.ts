@@ -5,8 +5,17 @@ import {
   defaultWagmiConfig,
 } from "@reown/appkit-wagmi-react-native";
 
-// 0. Setup queryClient
-export const queryClient = new QueryClient();
+// 0. Setup queryClient with optimized config
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 // 1. Get projectId at https://dashboard.reown.com
 // For demo purposes, using a placeholder - replace with your actual project ID
@@ -32,11 +41,23 @@ export const wagmiConfig = defaultWagmiConfig({
   metadata 
 });
 
-// 3. Create modal
-createAppKit({
-  projectId,
-  metadata,
-  wagmiConfig,
-  defaultChain: mainnet, // Optional
-  enableAnalytics: true, // Optional - defaults to your Cloud configuration
-}); 
+// 3. Create modal - delay initialization to improve startup time
+let appKitInitialized = false;
+
+export const initializeAppKit = () => {
+  if (!appKitInitialized) {
+    createAppKit({
+      projectId,
+      metadata,
+      wagmiConfig,
+      defaultChain: mainnet, // Optional
+      enableAnalytics: false, // Disable analytics for better performance
+    });
+    appKitInitialized = true;
+  }
+};
+
+// Initialize AppKit after a short delay to improve startup time
+setTimeout(() => {
+  initializeAppKit();
+}, 500); 

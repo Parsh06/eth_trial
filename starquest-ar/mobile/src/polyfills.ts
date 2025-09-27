@@ -1,23 +1,30 @@
-// Polyfills for crypto and other node modules in React Native
+// Essential polyfills for React Native - loaded synchronously
 import 'react-native-get-random-values';
-import 'react-native-url-polyfill/auto';
 
-// Set up global Buffer
-import { Buffer } from 'buffer';
-if (typeof global.Buffer === 'undefined') {
-  global.Buffer = Buffer;
-}
-
-// Set up global process
-import process from 'process/browser';
-if (typeof global.process === 'undefined') {
-  global.process = process;
-}
-
-// Set up global for React Native
+// Minimal polyfills setup
 if (typeof global.global === 'undefined') {
   global.global = global;
 }
 
-// WalletConnect React Native compatibility
-import '@walletconnect/react-native-compat'; 
+// Lazy load heavy polyfills to improve startup time
+const loadHeavyPolyfills = () => {
+  return Promise.all([
+    import('react-native-url-polyfill/auto'),
+    import('buffer').then(({ Buffer }) => {
+      if (typeof global.Buffer === 'undefined') {
+        global.Buffer = Buffer;
+      }
+    }),
+    import('process/browser').then((process) => {
+      if (typeof global.process === 'undefined') {
+        global.process = process.default;
+      }
+    }),
+    import('@walletconnect/react-native-compat')
+  ]);
+};
+
+// Initialize heavy polyfills after app startup
+setTimeout(() => {
+  loadHeavyPolyfills().catch(console.warn);
+}, 100); 
