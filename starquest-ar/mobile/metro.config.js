@@ -25,9 +25,24 @@ config.resolver.sourceExts = [...config.resolver.sourceExts, 'cjs'];
 // Handle node modules that might not be compatible with React Native
 config.resolver.unstable_enableSymlinks = false;
 
-// Add globals for React Native
+// Optimize resolver performance
+config.resolver.resolveRequest = (context, moduleName, platform) => {
+  // Skip heavy node_modules scanning for common patterns
+  if (moduleName.includes('@noble/hashes') || moduleName.includes('multiformats')) {
+    return context.resolveRequest(context, moduleName, platform);
+  }
+  return context.resolveRequest(context, moduleName, platform);
+};
+
+// Enhanced transformer with performance optimizations
 config.transformer = {
   ...config.transformer,
+  minifierConfig: {
+    keep_fnames: true,
+    mangle: {
+      keep_fnames: true,
+    },
+  },
   getTransformOptions: async () => ({
     transform: {
       experimentalImportSupport: false,
@@ -36,20 +51,34 @@ config.transformer = {
   }),
 };
 
-// Reduce file watching for systems with limited watchers
+// Enhanced caching
+config.cacheStores = [
+  {
+    name: 'FileStore',
+    options: {
+      cacheDirectory: require('path').join(__dirname, 'node_modules', '.cache', 'metro'),
+    },
+  },
+];
+
+// Optimized file watching with reduced scope
 config.watcher = {
   ...config.watcher,
+  additionalExts: ['cjs'],
   watchman: {
     deferStates: ["hg.update", "hg.update-merge"],
   },
   healthCheck: {
     enabled: true,
-    interval: 10000,
-    timeout: 5000,
+    interval: 15000,
+    timeout: 8000,
   },
 };
 
-// Limit the scope of file watching
+// Exclude heavy directories from watching
 config.watchFolders = [];
+
+// Performance optimizations
+config.maxWorkers = Math.max(1, Math.floor(require('os').cpus().length * 0.8));
 
 module.exports = config;

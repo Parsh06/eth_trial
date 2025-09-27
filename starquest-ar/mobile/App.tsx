@@ -1,26 +1,28 @@
 import './src/polyfills';
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import { View, Text, StyleSheet, StatusBar } from "react-native";
 import { WagmiProvider } from "wagmi";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { AppKit } from "@reown/appkit-wagmi-react-native";
 import { wagmiConfig, queryClient } from "./src/config/wagmi";
 import { GameProvider, useGame } from "./src/context/GameContext";
 import { ErrorBoundary } from "./src/components/ErrorBoundary";
 import { Preloader } from "./src/components/Preloader";
-import { LandingScreen } from "./src/screens/LandingScreen";
-import { LoginScreen } from "./src/screens/LoginScreen";
-import { OnboardingScreen } from "./src/screens/OnboardingScreen";
-import { WalletConnectScreen } from "./src/screens/WalletConnectScreen";
-import { HomeScreen } from "./src/screens/HomeScreen";
-import { MapScreen } from "./src/screens/MapScreen";
-import { QuestListScreen } from "./src/screens/QuestListScreen";
-import { LeaderboardScreen } from "./src/screens/LeaderboardScreen";
-import { ProfileScreen } from "./src/screens/ProfileScreen";
-import { ChallengeScreen } from "./src/screens/ChallengeScreen";
-import { RewardScreen } from "./src/screens/RewardScreen";
 import { BottomNav } from "./src/components/layout/BottomNav";
 import { colors } from "./src/utils/colors";
+
+// Lazy load heavy components to reduce initial bundle size
+const AppKit = lazy(() => import("@reown/appkit-wagmi-react-native").then(module => ({ default: module.AppKit })));
+const LandingScreen = lazy(() => import("./src/screens/LandingScreen").then(module => ({ default: module.LandingScreen })));
+const LoginScreen = lazy(() => import("./src/screens/LoginScreen").then(module => ({ default: module.LoginScreen })));
+const OnboardingScreen = lazy(() => import("./src/screens/OnboardingScreen").then(module => ({ default: module.OnboardingScreen })));
+const WalletConnectScreen = lazy(() => import("./src/screens/WalletConnectScreen").then(module => ({ default: module.WalletConnectScreen })));
+const HomeScreen = lazy(() => import("./src/screens/HomeScreen").then(module => ({ default: module.HomeScreen })));
+const MapScreen = lazy(() => import("./src/screens/MapScreen").then(module => ({ default: module.MapScreen })));
+const QuestListScreen = lazy(() => import("./src/screens/QuestListScreen").then(module => ({ default: module.QuestListScreen })));
+const LeaderboardScreen = lazy(() => import("./src/screens/LeaderboardScreen").then(module => ({ default: module.LeaderboardScreen })));
+const ProfileScreen = lazy(() => import("./src/screens/ProfileScreen").then(module => ({ default: module.ProfileScreen })));
+const ChallengeScreen = lazy(() => import("./src/screens/ChallengeScreen").then(module => ({ default: module.ChallengeScreen })));
+const RewardScreen = lazy(() => import("./src/screens/RewardScreen").then(module => ({ default: module.RewardScreen })));
 
 // Main App component with GameProvider
 const AppContent: React.FC = () => {
@@ -47,6 +49,13 @@ const AppContent: React.FC = () => {
   );
   }
 
+  // Loading fallback component
+  const LoadingFallback = () => (
+    <View style={styles.loadingContainer}>
+      <Text style={styles.loadingText}>Loading...</Text>
+    </View>
+  );
+
   // Render screens based on state
   const renderScreen = () => {
     console.log('App.tsx: Rendering screen:', state.screen, 'activeTab:', state.screen === 'main' ? state.activeTab : 'N/A');
@@ -54,17 +63,41 @@ const AppContent: React.FC = () => {
       case "preloader":
         return <Preloader onComplete={handlePreloaderComplete} />;
       case "landing":
-        return <LandingScreen />;
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <LandingScreen />
+          </Suspense>
+        );
       case "login":
-        return <LoginScreen />;
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <LoginScreen />
+          </Suspense>
+        );
       case "onboarding":
-        return <OnboardingScreen />;
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <OnboardingScreen />
+          </Suspense>
+        );
       case "wallet-connect":
-        return <WalletConnectScreen />;
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <WalletConnectScreen />
+          </Suspense>
+        );
       case "challenge":
-        return <ChallengeScreen />;
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <ChallengeScreen />
+          </Suspense>
+        );
       case "reward":
-        return <RewardScreen />;
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <RewardScreen />
+          </Suspense>
+        );
       case "main":
         return renderMainScreen();
       default:
@@ -78,17 +111,41 @@ const AppContent: React.FC = () => {
     
     switch (activeTab) {
       case "home":
-        return <HomeScreen />;
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <HomeScreen />
+          </Suspense>
+        );
       case "map":
-        return <MapScreen />;
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <MapScreen />
+          </Suspense>
+        );
       case "quests":
-        return <QuestListScreen />;
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <QuestListScreen />
+          </Suspense>
+        );
       case "leaderboard":
-        return <LeaderboardScreen />;
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <LeaderboardScreen />
+          </Suspense>
+        );
       case "profile":
-        return <ProfileScreen />;
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <ProfileScreen />
+          </Suspense>
+        );
       default:
-        return <HomeScreen />;
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <HomeScreen />
+          </Suspense>
+        );
     }
   };
 
@@ -112,7 +169,9 @@ const AppContent: React.FC = () => {
           tabs={tabs}
         />
       )}
-      <AppKit />
+      <Suspense fallback={null}>
+        <AppKit />
+      </Suspense>
     </View>
   );
 };

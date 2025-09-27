@@ -3,11 +3,16 @@
   "version": "1.0.0",
   "main": "index.ts",
   "scripts": {
-    "start": "expo start --clear",
-    "android": "expo start --android --clear",
-    "ios": "expo start --ios --clear",
-    "web": "expo start --web --clear",
+    "start": "expo start --clear --max-workers 4",
+    "start:dev": "expo start --dev-client --clear --max-workers 4",
+    "start:tunnel": "expo start --tunnel --clear --max-workers 4",
+    "android": "expo start --android --clear --max-workers 4",
+    "ios": "expo start --ios --clear --max-workers 4",
+    "web": "expo start --web --clear --max-workers 4",
     "build": "expo build",
+    "build:android": "expo build:android --clear-cache",
+    "build:ios": "expo build:ios --clear-cache",
+    "clean": "expo r -c && npm start -- --reset-cache",
     "eject": "expo eject"
   },
   "dependencies": {
@@ -41,7 +46,6 @@
     "react-native-crypto-js": "^1.0.0",
     "react-native-gesture-handler": "^2.20.2",
     "react-native-get-random-values": "^1.11.0",
-
     "react-native-modal": "^14.0.0-rc.1",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
@@ -55,7 +59,7 @@
     "wagmi": "^2.17.5"
   },
   "devDependencies": {
-    "@types/react": "19.1.0",
+    "@types/react": "^19.1.10",
     "typescript": "~5.9.2"
   },
   "private": true
