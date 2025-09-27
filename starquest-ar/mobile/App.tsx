@@ -6,17 +6,17 @@ import { Preloader } from "./src/components/Preloader";
 import { BottomNav } from "./src/components/layout/BottomNav";
 import { colors } from "./src/utils/colors";
 
-// Lazy load screens
-const LandingScreen = lazy(() => import("./src/screens/LandingScreen").then(module => ({ default: module.LandingScreen })));
-const LoginScreen = lazy(() => import("./src/screens/LoginScreen").then(module => ({ default: module.LoginScreen })));
-const OnboardingScreen = lazy(() => import("./src/screens/OnboardingScreen").then(module => ({ default: module.OnboardingScreen })));
-const HomeScreen = lazy(() => import("./src/screens/HomeScreen").then(module => ({ default: module.HomeScreen })));
-const MapScreen = lazy(() => import("./src/screens/MapScreen").then(module => ({ default: module.MapScreen })));
-const QuestListScreen = lazy(() => import("./src/screens/QuestListScreen").then(module => ({ default: module.QuestListScreen })));
-const LeaderboardScreen = lazy(() => import("./src/screens/LeaderboardScreen").then(module => ({ default: module.LeaderboardScreen })));
-const ProfileScreen = lazy(() => import("./src/screens/ProfileScreen").then(module => ({ default: module.ProfileScreen })));
-const ChallengeScreen = lazy(() => import("./src/screens/ChallengeScreen").then(module => ({ default: module.ChallengeScreen })));
-const RewardScreen = lazy(() => import("./src/screens/RewardScreen").then(module => ({ default: module.RewardScreen })));
+// Lazy load screens with named exports
+const LandingScreen = lazy(() => import("./src/screens/LandingScreen").then(m => ({ default: m.LandingScreen })));
+const LoginScreen = lazy(() => import("./src/screens/LoginScreen").then(m => ({ default: m.LoginScreen })));
+const OnboardingScreen = lazy(() => import("./src/screens/OnboardingScreen").then(m => ({ default: m.OnboardingScreen })));
+const HomeScreen = lazy(() => import("./src/screens/HomeScreen").then(m => ({ default: m.HomeScreen })));
+const MapScreen = lazy(() => import("./src/screens/MapScreen").then(m => ({ default: m.MapScreen })));
+const QuestListScreen = lazy(() => import("./src/screens/QuestListScreen").then(m => ({ default: m.QuestListScreen })));
+const LeaderboardScreen = lazy(() => import("./src/screens/LeaderboardScreen").then(m => ({ default: m.LeaderboardScreen })));
+const ProfileScreen = lazy(() => import("./src/screens/ProfileScreen").then(m => ({ default: m.ProfileScreen })));
+const ChallengeScreen = lazy(() => import("./src/screens/ChallengeScreen").then(m => ({ default: m.ChallengeScreen })));
+const RewardScreen = lazy(() => import("./src/screens/RewardScreen").then(m => ({ default: m.RewardScreen })));
 
 // Main App component with GameProvider
 const AppContent: React.FC = () => {

@@ -19,6 +19,9 @@ import { useFocusEffect } from '@react-navigation/native';
 // import { injected } from 'wagmi/connectors';
 
 import { useGame } from '../context/GameContext';
+
+// Get screen dimensions
+const { width } = Dimensions.get('window');
 import { NeoButton } from '../components/ui/NeoButton';
 import { NeoCard } from '../components/ui/NeoCard';
 import { colors } from '../utils/colors';
