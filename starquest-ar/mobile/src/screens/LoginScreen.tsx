@@ -23,6 +23,7 @@ const { width } = Dimensions.get('window');
 export const LoginScreen: React.FC = () => {
   const { handleWalletConnect, loading, error } = useGame();
   const [isConnecting, setIsConnecting] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState('');
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(50));
 
@@ -45,14 +46,18 @@ export const LoginScreen: React.FC = () => {
   const connectMetaMask = async () => {
     try {
       setIsConnecting(true);
+      setConnectionStatus('Checking MetaMask availability...');
       
       // Check if MetaMask is available
       if (!metaMaskService.isWalletInstalled()) {
+        setConnectionStatus('MetaMask not found');
         Alert.alert(
           'MetaMask Not Found',
-          'Please install MetaMask browser extension or mobile app to continue.',
+          Platform.OS === 'web' 
+            ? 'Please install MetaMask browser extension to continue.'
+            : 'Please install MetaMask mobile app to continue.',
           [
-            { text: 'OK', style: 'default' },
+            { text: 'Cancel', style: 'cancel' },
             { 
               text: 'Install MetaMask', 
               style: 'default',
@@ -60,6 +65,16 @@ export const LoginScreen: React.FC = () => {
                 // Open MetaMask installation page
                 if (Platform.OS === 'web') {
                   window.open('https://metamask.io/download/', '_blank');
+                } else {
+                  const appStoreUrl = Platform.OS === 'ios' 
+                    ? 'https://apps.apple.com/app/metamask/id1438144202'
+                    : 'https://play.google.com/store/apps/details?id=io.metamask';
+                  
+                  import('react-native').then(({ Linking }) => {
+                    Linking.openURL(appStoreUrl).catch(err => 
+                      console.error('Failed to open app store:', err)
+                    );
+                  });
                 }
               }
             }
@@ -69,25 +84,43 @@ export const LoginScreen: React.FC = () => {
       }
 
       // Connect to MetaMask
+      setConnectionStatus('Connecting to wallet...');
       const walletInfo: WalletInfo = await metaMaskService.connectWallet();
       
+      setConnectionStatus(`Connected: ${walletInfo.address.substring(0, 6)}...${walletInfo.address.substring(38)}`);
+      
       // Sign a message for authentication
-      const message = `Welcome to StarQuest AR!\n\nPlease sign this message to authenticate your wallet.\n\nTimestamp: ${Date.now()}`;
+      setConnectionStatus('Requesting signature...');
+      const message = `Welcome to StarQuest AR!\n\nPlease sign this message to authenticate your wallet.\n\nWallet: ${walletInfo.address}\nTimestamp: ${Date.now()}`;
       const signature = await metaMaskService.signMessage(message);
       
       // Connect to the app with signature and message
+      setConnectionStatus('Authenticating with StarQuest...');
       await handleWalletConnect(walletInfo.address, signature, message);
       
-      // Navigation will happen automatically via GameContext
-      console.log('Wallet connected with signature, navigation should happen automatically');
+      setConnectionStatus('Welcome to StarQuest AR! 🌟');
+      console.log('Wallet connected successfully with signature verification');
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('MetaMask connection error:', error);
-      Alert.alert(
-        'Connection Failed',
-        error.message || 'Failed to connect to MetaMask. Please try again.',
-        [{ text: 'OK', style: 'default' }]
-      );
+      setConnectionStatus('');
+      
+      // Handle specific error types
+      let errorMessage = 'Failed to connect to MetaMask. Please try again.';
+      let errorTitle = 'Connection Failed';
+      
+      if (error.message.includes('User rejected')) {
+        errorMessage = 'Wallet connection was cancelled. Please try again to continue.';
+        errorTitle = 'Connection Cancelled';
+      } else if (error.message.includes('signature')) {
+        errorMessage = 'Signature verification failed. Please try signing the message again.';
+        errorTitle = 'Signature Failed';
+      } else if (error.message.includes('network')) {
+        errorMessage = 'Network error. Please check your internet connection and try again.';
+        errorTitle = 'Network Error';
+      }
+      
+      Alert.alert(errorTitle, errorMessage, [{ text: 'OK', style: 'default' }]);
     } finally {
       setIsConnecting(false);
     }
@@ -146,12 +179,15 @@ export const LoginScreen: React.FC = () => {
               Connect using your MetaMask wallet to access all features
             </Text>
             <NeoButton
-              title={isConnecting ? 'Connecting...' : 'Connect MetaMask'}
+              title={isConnecting || loading ? 
+                (connectionStatus ? 'Connecting...' : 'Connecting...') : 
+                'Connect MetaMask'
+              }
               onPress={connectMetaMask}
               variant="gradient"
               gradient={[colors.electricPurple, colors.electricPink]}
               size="large"
-              disabled={isConnecting}
+              disabled={isConnecting || loading}
               style={styles.connectButton}
             />
           </NeoCard>
@@ -169,10 +205,49 @@ export const LoginScreen: React.FC = () => {
               onPress={connectWalletConnect}
               variant="outline"
               size="large"
-              disabled={isConnecting}
+              disabled={isConnecting || loading}
               style={styles.connectButton}
             />
           </NeoCard>
+
+          {/* Demo Mode Card - for development */}
+          {__DEV__ && (
+            <NeoCard style={[styles.walletCard, styles.demoCard]}>
+              <View style={styles.walletHeader}>
+                <Text style={styles.walletIcon}>⚡</Text>
+                <Text style={styles.walletTitle}>Demo Mode</Text>
+              </View>
+              <Text style={styles.walletDescription}>
+                Quick demo connection for testing (Development only)
+              </Text>
+              <NeoButton
+                title={isConnecting ? 'Connecting...' : 'Demo Connect'}
+                onPress={async () => {
+                  try {
+                    setIsConnecting(true);
+                    setConnectionStatus('Demo connection...');
+                    
+                    // Simulate connection delay
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    
+                    const demoAddress = '0x742d35Cc6834C0532925a3b8A9C9b0a4c0c5e1a4';
+                    setConnectionStatus('Demo authenticated!');
+                    
+                    await handleWalletConnect(demoAddress);
+                  } catch (error) {
+                    console.error('Demo connection error:', error);
+                    Alert.alert('Demo Error', 'Demo connection failed');
+                  } finally {
+                    setIsConnecting(false);
+                  }
+                }}
+                variant="secondary"
+                size="large"
+                disabled={isConnecting || loading}
+                style={styles.connectButton}
+              />
+            </NeoCard>
+          )}
         </View>
 
         {/* Features */}
@@ -199,10 +274,12 @@ export const LoginScreen: React.FC = () => {
         </View>
 
         {/* Loading Indicator */}
-        {loading && (
+        {(loading || isConnecting) && (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={colors.electricPurple} />
-            <Text style={styles.loadingText}>Setting up your cosmic profile...</Text>
+            <Text style={styles.loadingText}>
+              {connectionStatus || 'Setting up your cosmic profile...'}
+            </Text>
           </View>
         )}
 
@@ -280,6 +357,10 @@ const styles = StyleSheet.create({
   },
   connectButton: {
     width: '100%',
+  },
+  demoCard: {
+    borderColor: colors.electricGreen,
+    backgroundColor: colors.electricGreen + '05',
   },
   featuresContainer: {
     marginBottom: 20,
