@@ -251,6 +251,25 @@ export const LoginScreen: React.FC = () => {
           )}
         </View>
 
+        {/* Debug Options - only in development */}
+        {__DEV__ && (
+          <View style={styles.debugContainer}>
+            <TouchableOpacity 
+              style={styles.debugButton}
+              onPress={async () => {
+                try {
+                  await AsyncStorage.clear();
+                  Alert.alert('Cache Cleared', 'All cached data has been removed. Restart the app to test fresh login.');
+                } catch (error) {
+                  Alert.alert('Error', 'Failed to clear cache');
+                }
+              }}
+            >
+              <Text style={styles.debugButtonText}>Clear Cache (Debug)</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Features */}
         <View style={styles.featuresContainer}>
           <Text style={styles.featuresTitle}>What you'll get:</Text>
@@ -362,6 +381,23 @@ const styles = StyleSheet.create({
   demoCard: {
     borderColor: colors.electricGreen,
     backgroundColor: colors.electricGreen + '05',
+  },
+  debugContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  debugButton: {
+    backgroundColor: colors.error + '20',
+    borderColor: colors.error,
+    borderWidth: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  debugButtonText: {
+    color: colors.error,
+    fontSize: 12,
+    fontWeight: '600',
   },
   featuresContainer: {
     marginBottom: 20,
