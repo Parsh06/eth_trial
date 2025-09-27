@@ -13,6 +13,8 @@ import * as Location from 'expo-location';
 import { colors } from '../utils/colors';
 import { typography } from '../utils/typography';
 import { NeoButton } from './ui/NeoButton';
+import { QuestionModal } from './QuestionModal';
+import starsDatabase from '../data/stars-database.json';
 
 const { width, height } = Dimensions.get('window');
 
@@ -37,11 +39,60 @@ export const OpenStreetMapView: React.FC<OpenStreetMapViewProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [mapReady, setMapReady] = useState(false);
+  const [questionModalVisible, setQuestionModalVisible] = useState(false);
+  const [currentStarQuestion, setCurrentStarQuestion] = useState<any>(null);
   const webViewRef = useRef<WebView>(null);
 
   useEffect(() => {
     getCurrentLocation();
   }, []);
+
+  const getRandomStarQuestion = () => {
+    // Generate random number from 1 to 12
+    const randomId = Math.floor(Math.random() * 12) + 1;
+    console.log('🎲 Generated random star ID:', randomId);
+    
+    // Find the star with matching ID in the database
+    const starQuestion = starsDatabase.stars.find(star => star.id === randomId);
+    
+    if (starQuestion) {
+      console.log('⭐ Found star question:', starQuestion.name, '-', starQuestion.question);
+      return starQuestion;
+    } else {
+      console.log('❌ No star found with ID:', randomId);
+      return null;
+    }
+  };
+
+  const handleStartChallenge = (starData: any) => {
+    console.log('🎯 Starting challenge for star:', starData.starId);
+    
+    const starQuestion = getRandomStarQuestion();
+    if (starQuestion) {
+      setCurrentStarQuestion(starQuestion);
+      setQuestionModalVisible(true);
+    } else {
+      Alert.alert('Error', 'Unable to load challenge question. Please try again.');
+    }
+  };
+
+  const handleAnswerSubmit = (isCorrect: boolean, starQuestion: any) => {
+    console.log('📝 Answer submitted:', isCorrect ? 'Correct' : 'Incorrect', 'for star:', starQuestion.name);
+    
+    if (isCorrect) {
+      console.log('🎉 Player earned:', starQuestion.reward.points, 'points');
+      // Here you could add logic to save progress, update user stats, etc.
+    }
+    
+    // Close the modal
+    setQuestionModalVisible(false);
+    setCurrentStarQuestion(null);
+  };
+
+  const handleCloseModal = () => {
+    setQuestionModalVisible(false);
+    setCurrentStarQuestion(null);
+  };
 
   const getCurrentLocation = async () => {
     try {
@@ -350,8 +401,7 @@ export const OpenStreetMapView: React.FC<OpenStreetMapViewProps> = ({
             [
               { text: 'Cancel', style: 'cancel' },
               { text: 'Start Challenge', onPress: () => {
-                // Handle star challenge start
-                console.log('🎯 Starting challenge for star:', data.starId);
+                handleStartChallenge(data);
               }},
             ]
           );
@@ -465,6 +515,14 @@ export const OpenStreetMapView: React.FC<OpenStreetMapViewProps> = ({
           📍 {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
         </Text>
       </View>
+
+      {/* Question Modal */}
+      <QuestionModal
+        visible={questionModalVisible}
+        onClose={handleCloseModal}
+        starQuestion={currentStarQuestion}
+        onAnswerSubmit={handleAnswerSubmit}
+      />
     </View>
   );
 };

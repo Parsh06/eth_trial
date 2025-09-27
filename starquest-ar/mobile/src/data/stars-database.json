@@ -1,0 +1,348 @@
+{
+  "stars": [
+    {
+      "id": 1,
+      "name": "Alpha Star",
+      "description": "The first star in your journey",
+      "location": {
+        "latitude": 40.7128,
+        "longitude": -74.0060,
+        "address": "New York, NY, USA",
+        "radius": 50
+      },
+      "question": "Scramble the letters 'ROBXEL' to name a popular online marketplace.",
+      "answer": "ROBLOX",
+      "difficulty": "beginner",
+      "status": "completed",
+      "reward": {
+        "nftId": "nft-1",
+        "name": "Alpha Star NFT",
+        "rarity": "common",
+        "image": "https://via.placeholder.com/200x200/8B5CF6/FFFFFF?text=Alpha",
+        "points": 100
+      },
+      "metadata": {
+        "discoveredAt": "2024-01-15T10:30:00Z",
+        "discoverer": "StarHunter",
+        "experienceReward": 50,
+        "tokenReward": "10"
+      }
+    },
+    {
+      "id": 2,
+      "name": "Beta Star",
+      "description": "A challenging star for the brave",
+      "location": {
+        "latitude": 34.0522,
+        "longitude": -118.2437,
+        "address": "Los Angeles, CA, USA",
+        "radius": 75
+      },
+      "question": "What is the 7-letter word that means a person's digital identity, has the word 'TAR' in it, and is often used in gaming?",
+      "answer": "AVATAR",
+      "difficulty": "intermediate",
+      "status": "completed",
+      "reward": {
+        "nftId": "nft-2",
+        "name": "Beta Star NFT",
+        "rarity": "rare",
+        "image": "https://via.placeholder.com/200x200/10B981/FFFFFF?text=Beta",
+        "points": 250
+      },
+      "metadata": {
+        "discoveredAt": "2024-01-20T14:45:00Z",
+        "discoverer": "StarHunter",
+        "experienceReward": 100,
+        "tokenReward": "25"
+      }
+    },
+    {
+      "id": 3,
+      "name": "Gamma Star",
+      "description": "The ultimate test of skill",
+      "location": {
+        "latitude": 51.5074,
+        "longitude": -0.1278,
+        "address": "London, UK",
+        "radius": 100
+      },
+      "question": "Spot the difference: Which letter is in the word 'MINING' but NOT in the word 'FINANCE'?",
+      "answer": "G",
+      "difficulty": "expert",
+      "status": "available",
+      "reward": {
+        "nftId": "nft-3",
+        "name": "Gamma Star NFT",
+        "rarity": "epic",
+        "image": "https://via.placeholder.com/200x200/F59E0B/FFFFFF?text=Gamma",
+        "points": 500
+      },
+      "metadata": {
+        "discoveredAt": null,
+        "discoverer": null,
+        "experienceReward": 200,
+        "tokenReward": "50"
+      }
+    },
+    {
+      "id": 4,
+      "name": "Delta Star",
+      "description": "Hidden in the shadows",
+      "location": {
+        "latitude": 35.6762,
+        "longitude": 139.6503,
+        "address": "Tokyo, Japan",
+        "radius": 60
+      },
+      "question": "Find the hidden word: I am a digital creation, signed by a secret key. I hold unique value, and am often tied to a 'token tree.' What am I?",
+      "answer": "ASSET",
+      "difficulty": "intermediate",
+      "status": "locked",
+      "reward": {
+        "nftId": "nft-4",
+        "name": "Delta Star NFT",
+        "rarity": "rare",
+        "image": "https://via.placeholder.com/200x200/EF4444/FFFFFF?text=Delta",
+        "points": 300
+      },
+      "metadata": {
+        "discoveredAt": null,
+        "discoverer": null,
+        "experienceReward": 150,
+        "tokenReward": "35"
+      }
+    },
+    {
+      "id": 5,
+      "name": "Epsilon Star",
+      "description": "A star that tests your crypto knowledge",
+      "location": {
+        "latitude": 48.8566,
+        "longitude": 2.3522,
+        "address": "Paris, France",
+        "radius": 80
+      },
+      "question": "I am built with a chain, but wear no lock, my value can rise around the clock. What am I?",
+      "answer": "CRYPTO",
+      "difficulty": "beginner",
+      "status": "available",
+      "reward": {
+        "nftId": "nft-5",
+        "name": "Epsilon Star NFT",
+        "rarity": "common",
+        "image": "https://via.placeholder.com/200x200/3B82F6/FFFFFF?text=Epsilon",
+        "points": 150
+      },
+      "metadata": {
+        "discoveredAt": null,
+        "discoverer": null,
+        "experienceReward": 75,
+        "tokenReward": "15"
+      }
+    },
+    {
+      "id": 6,
+      "name": "Zeta Star",
+      "description": "A cosmic puzzle waiting to be solved",
+      "location": {
+        "latitude": -33.8688,
+        "longitude": 151.2093,
+        "address": "Sydney, Australia",
+        "radius": 90
+      },
+      "question": "Unscramble this blockchain term: 'HASH' + 'ING' = ?",
+      "answer": "HASHING",
+      "difficulty": "expert",
+      "status": "available",
+      "reward": {
+        "nftId": "nft-6",
+        "name": "Zeta Star NFT",
+        "rarity": "legendary",
+        "image": "https://via.placeholder.com/200x200/8B5CF6/FFFFFF?text=Zeta",
+        "points": 1000
+      },
+      "metadata": {
+        "discoveredAt": null,
+        "discoverer": null,
+        "experienceReward": 500,
+        "tokenReward": "100"
+      }
+    },
+    {
+      "id": 7,
+      "name": "Eta Star",
+      "description": "A star that challenges your DeFi knowledge",
+      "location": {
+        "latitude": 55.7558,
+        "longitude": 37.6176,
+        "address": "Moscow, Russia",
+        "radius": 70
+      },
+      "question": "I'm a 3-letter acronym for a smart contract that automatically executes when conditions are met. What am I?",
+      "answer": "DAO",
+      "difficulty": "intermediate",
+      "status": "locked",
+      "reward": {
+        "nftId": "nft-7",
+        "name": "Eta Star NFT",
+        "rarity": "rare",
+        "image": "https://via.placeholder.com/200x200/10B981/FFFFFF?text=Eta",
+        "points": 400
+      },
+      "metadata": {
+        "discoveredAt": null,
+        "discoverer": null,
+        "experienceReward": 200,
+        "tokenReward": "40"
+      }
+    },
+    {
+      "id": 8,
+      "name": "Theta Star",
+      "description": "A star that tests your NFT knowledge",
+      "location": {
+        "latitude": 37.7749,
+        "longitude": -122.4194,
+        "address": "San Francisco, CA, USA",
+        "radius": 85
+      },
+      "question": "What 5-letter word describes a unique digital certificate of ownership, often used for digital art?",
+      "answer": "TOKEN",
+      "difficulty": "intermediate",
+      "status": "available",
+      "reward": {
+        "nftId": "nft-8",
+        "name": "Theta Star NFT",
+        "rarity": "epic",
+        "image": "https://via.placeholder.com/200x200/F59E0B/FFFFFF?text=Theta",
+        "points": 600
+      },
+      "metadata": {
+        "discoveredAt": null,
+        "discoverer": null,
+        "experienceReward": 300,
+        "tokenReward": "60"
+      }
+    },
+    {
+      "id": 9,
+      "name": "Iota Star",
+      "description": "A star that challenges your blockchain history",
+      "location": {
+        "latitude": 41.9028,
+        "longitude": 12.4964,
+        "address": "Rome, Italy",
+        "radius": 95
+      },
+      "question": "I'm a 4-letter word that describes the process of validating transactions on a blockchain. What am I?",
+      "answer": "MINE",
+      "difficulty": "expert",
+      "status": "locked",
+      "reward": {
+        "nftId": "nft-9",
+        "name": "Iota Star NFT",
+        "rarity": "legendary",
+        "image": "https://via.placeholder.com/200x200/EF4444/FFFFFF?text=Iota",
+        "points": 1200
+      },
+      "metadata": {
+        "discoveredAt": null,
+        "discoverer": null,
+        "experienceReward": 600,
+        "tokenReward": "120"
+      }
+    },
+    {
+      "id": 10,
+      "name": "Kappa Star",
+      "description": "A star that tests your Web3 knowledge",
+      "location": {
+        "latitude": 52.5200,
+        "longitude": 13.4050,
+        "address": "Berlin, Germany",
+        "radius": 65
+      },
+      "question": "What 6-letter word describes a decentralized application that runs on blockchain?",
+      "answer": "DAPP",
+      "difficulty": "beginner",
+      "status": "available",
+      "reward": {
+        "nftId": "nft-10",
+        "name": "Kappa Star NFT",
+        "rarity": "common",
+        "image": "https://via.placeholder.com/200x200/3B82F6/FFFFFF?text=Kappa",
+        "points": 200
+      },
+      "metadata": {
+        "discoveredAt": null,
+        "discoverer": null,
+        "experienceReward": 100,
+        "tokenReward": "20"
+      }
+    },
+    {
+      "id": 11,
+      "name": "Lambda Star",
+      "description": "A star that challenges your smart contract knowledge",
+      "location": {
+        "latitude": 19.4326,
+        "longitude": -99.1332,
+        "address": "Mexico City, Mexico",
+        "radius": 55
+      },
+      "question": "I'm a 5-letter word that describes a self-executing contract with terms written in code. What am I?",
+      "answer": "SMART",
+      "difficulty": "intermediate",
+      "status": "available",
+      "reward": {
+        "nftId": "nft-11",
+        "name": "Lambda Star NFT",
+        "rarity": "rare",
+        "image": "https://via.placeholder.com/200x200/10B981/FFFFFF?text=Lambda",
+        "points": 350
+      },
+      "metadata": {
+        "discoveredAt": null,
+        "discoverer": null,
+        "experienceReward": 175,
+        "tokenReward": "35"
+      }
+    },
+    {
+      "id": 12,
+      "name": "Mu Star",
+      "description": "The final star that tests everything you've learned",
+      "location": {
+        "latitude": -22.9068,
+        "longitude": -43.1729,
+        "address": "Rio de Janeiro, Brazil",
+        "radius": 110
+      },
+      "question": "I'm a 7-letter word that describes the process of converting data into a fixed-size string. What am I?",
+      "answer": "HASHING",
+      "difficulty": "expert",
+      "status": "locked",
+      "reward": {
+        "nftId": "nft-12",
+        "name": "Mu Star NFT",
+        "rarity": "legendary",
+        "image": "https://via.placeholder.com/200x200/8B5CF6/FFFFFF?text=Mu",
+        "points": 2000
+      },
+      "metadata": {
+        "discoveredAt": null,
+        "discoverer": null,
+        "experienceReward": 1000,
+        "tokenReward": "200"
+      }
+    }
+  ],
+  "metadata": {
+    "totalStars": 12,
+    "availableStars": 5,
+    "completedStars": 2,
+    "lockedStars": 5,
+    "lastUpdated": "2024-01-25T12:00:00Z",
+    "version": "1.0.0"
+  }
+}
