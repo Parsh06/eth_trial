@@ -19,6 +19,8 @@ import { StakingScreen } from './StakingScreen';
 import { MathGameScreen } from './MathGameScreen';
 import { GameResultScreen } from './GameResultScreen';
 import { ProximityService, ProximityTarget, ProximityEvent } from '../services/ProximityService';
+import { starQuestWeb3Service, StakingResult } from '../services/StarQuestWeb3Service';
+import { gameCompletionService, GameResult } from '../services/GameCompletionService';
 import { generateRandomLocations } from '../utils/distance';
 import { colors } from '../utils/colors';
 import { typography } from '../utils/typography';
@@ -31,7 +33,7 @@ const CELL_SIZE = (width - 60) / GRID_SIZE;
 type GameState = 'map' | 'invitation' | 'staking' | 'playing' | 'result';
 
 export const MapScreen: React.FC = () => {
-  const { stars, handleChallengeSelect } = useGame();
+  const { stars, handleChallengeSelect, user } = useGame();
   const [selectedStar, setSelectedStar] = useState<Star | null>(null);
   const [showMapView, setShowMapView] = useState(true);
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
@@ -42,6 +44,37 @@ export const MapScreen: React.FC = () => {
   const [proximityDistance, setProximityDistance] = useState(0);
   const [gameResult, setGameResult] = useState<{ isWinner: boolean; score: number } | null>(null);
   const [randomTargets, setRandomTargets] = useState<ProximityTarget[]>([]);
+  
+  // Web3 integration state
+  const [stakingResult, setStakingResult] = useState<StakingResult | null>(null);
+  const [gameCompletionResult, setGameCompletionResult] = useState<GameResult | null>(null);
+  const [playerBalance, setPlayerBalance] = useState<string>('0');
+  const [isWeb3Connected, setIsWeb3Connected] = useState(false);
+
+  // Initialize Web3 connection
+  useEffect(() => {
+    const initializeWeb3 = async () => {
+      try {
+        // For demo purposes, use a test private key
+        // In production, this should come from secure storage
+        const testPrivateKey = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
+        
+        const connected = await starQuestWeb3Service.connectWallet(testPrivateKey);
+        if (connected) {
+          setIsWeb3Connected(true);
+          const balance = await starQuestWeb3Service.getBalance();
+          setPlayerBalance(balance);
+          console.log('✅ Web3 connected, balance:', balance);
+        }
+      } catch (error) {
+        console.error('❌ Failed to initialize Web3:', error);
+      }
+    };
+
+    if (user?.walletAddress) {
+      initializeWeb3();
+    }
+  }, [user?.walletAddress]);
 
   const getStarColor = (status: Star['status']) => {
     switch (status) {
@@ -153,15 +186,23 @@ export const MapScreen: React.FC = () => {
     }
   }, [gameState]);
 
-  // Initialize proximity service and random targets
+  // Initialize proximity service and targets
   useEffect(() => {
     if (userLocation && randomTargets.length === 0) {
-      console.log('🎯 MapScreen: Generating random game targets around user location');
+      console.log('🎯 MapScreen: Generating game targets');
       
-      // Generate 3-5 random game locations within 2km radius
-      const locations = generateRandomLocations(userLocation, 5, 2000);
+      // Fixed star spot at specified coordinates
+      const fixedStarSpot: ProximityTarget = {
+        id: 'fixed-star-1',
+        name: 'Star Quest Hub',
+        coordinates: { latitude: 28.556743, longitude: 77.044078 },
+        radius: 1.5, // 1.5 meter radius
+        isActive: true,
+      };
       
-      const targets: ProximityTarget[] = locations.map(location => ({
+      // Generate additional random game locations within 2km radius
+      const locations = generateRandomLocations(userLocation, 4, 2000);
+      const randomTargets: ProximityTarget[] = locations.map(location => ({
         id: location.id,
         name: location.name,
         coordinates: { latitude: location.latitude, longitude: location.longitude },
@@ -169,10 +210,13 @@ export const MapScreen: React.FC = () => {
         isActive: true,
       }));
       
-      setRandomTargets(targets);
+      // Combine fixed and random targets
+      const allTargets = [fixedStarSpot, ...randomTargets];
+      
+      setRandomTargets(allTargets);
       
       // Add targets to proximity service
-      targets.forEach(target => {
+      allTargets.forEach(target => {
         ProximityService.addTarget(target);
       });
       
@@ -182,7 +226,8 @@ export const MapScreen: React.FC = () => {
       // Start tracking
       ProximityService.startTracking();
       
-      console.log('🎯 MapScreen: Added', targets.length, 'proximity targets');
+      console.log('🎯 MapScreen: Added', allTargets.length, 'proximity targets (1 fixed + 4 random)');
+      console.log('⭐ MapScreen: Fixed star spot at:', fixedStarSpot.coordinates);
     }
     
     return () => {
@@ -232,14 +277,36 @@ export const MapScreen: React.FC = () => {
     setCurrentTarget(null);
   };
 
-  const handleStakingComplete = () => {
-    console.log('✅ MapScreen: Staking complete, starting game');
-    setGameState('playing');
+  const handleStakingComplete = (result?: StakingResult) => {
+    console.log('💰 MapScreen: Staking complete', result);
+    if (result?.success) {
+      setStakingResult(result);
+      setGameState('playing');
+      console.log('✅ Staking successful, challenge ID:', result.challengeId);
+    } else {
+      console.log('❌ Staking failed, returning to map');
+      setGameState('map');
+    }
   };
 
-  const handleGameComplete = (isWinner: boolean, score: number) => {
+  const handleGameComplete = async (isWinner: boolean, score: number) => {
     console.log('🎮 MapScreen: Game complete:', { isWinner, score });
     setGameResult({ isWinner, score });
+    
+    // Complete the blockchain challenge
+    if (stakingResult?.challengeId) {
+      try {
+        const completionResult = await gameCompletionService.completeChallenge(
+          stakingResult.challengeId,
+          isWinner
+        );
+        setGameCompletionResult(completionResult);
+        console.log('🎯 Challenge completed on blockchain:', completionResult);
+      } catch (error) {
+        console.error('❌ Failed to complete challenge on blockchain:', error);
+      }
+    }
+    
     setGameState('result');
   };
 
@@ -248,10 +315,15 @@ export const MapScreen: React.FC = () => {
     setGameState('map');
     setCurrentTarget(null);
     setGameResult(null);
+    setStakingResult(null);
+    setGameCompletionResult(null);
   };
 
   const handlePlayAgain = () => {
     console.log('🔄 MapScreen: Playing again');
+    setGameResult(null);
+    setStakingResult(null);
+    setGameCompletionResult(null);
     setGameState('staking');
   };
 
@@ -260,8 +332,10 @@ export const MapScreen: React.FC = () => {
     return (
       <StakingScreen
         onStakingComplete={handleStakingComplete}
-        stakeAmount="0.01 ETH"
+        stakeAmount="0.01 HBAR"
         targetName={currentTarget.name}
+        starId={1} // Use appropriate star ID
+        privateKey="0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef" // Demo key
       />
     );
   }
@@ -277,13 +351,17 @@ export const MapScreen: React.FC = () => {
   }
 
   if (gameState === 'result' && gameResult && currentTarget) {
+    const rewardAmount = gameCompletionResult?.payout || "0.02";
+    const transactionHash = gameCompletionResult?.transactionHash || stakingResult?.transactionHash;
+    
     return (
       <GameResultScreen
         isWinner={gameResult.isWinner}
         score={gameResult.score}
-        stakeAmount="0.01 ETH"
-        rewardAmount="0.02 ETH"
+        stakeAmount="0.01 HBAR"
+        rewardAmount={`${rewardAmount} HBAR`}
         targetName={currentTarget.name}
+        transactionHash={transactionHash}
         onBackToMap={handleBackToMap}
         onPlayAgain={handlePlayAgain}
       />
@@ -301,6 +379,7 @@ export const MapScreen: React.FC = () => {
         latitude: target.coordinates.latitude,
         longitude: target.coordinates.longitude,
       },
+      type: target.id === 'fixed-star-1' ? 'fixed' as const : 'game' as const,
     }))
   ] : [];
 
@@ -315,6 +394,9 @@ export const MapScreen: React.FC = () => {
               <Text style={styles.subtitle}>
                 {showMapView ? 'Your real-world location' : 'Grid view of available stars'}
               </Text>
+              {isWeb3Connected && (
+                <Text style={styles.balanceText}>💰 Balance: {playerBalance} HBAR</Text>
+              )}
             </View>
             <View style={styles.viewToggle}>
               <Text style={styles.toggleLabel}>Grid</Text>
@@ -496,6 +578,12 @@ const styles = StyleSheet.create({
   subtitle: {
     ...typography.body,
     color: colors.mutedForeground,
+  },
+  balanceText: {
+    ...typography.caption,
+    color: colors.success,
+    fontWeight: '600',
+    marginTop: 4,
   },
   gridContainer: {
     marginBottom: 24,
