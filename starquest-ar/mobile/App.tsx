@@ -179,6 +179,33 @@ const App: React.FC = () => {
     initializeAppKit();
   }, []);
 
+  // Add global error handler
+  React.useEffect(() => {
+    const originalConsoleError = console.error;
+    console.error = (...args) => {
+      console.log('🔴 GLOBAL ERROR CAUGHT:', ...args);
+      originalConsoleError(...args);
+    };
+
+    const handleGlobalError = (error: any, isFatal?: boolean) => {
+      console.log('😨 UNHANDLED ERROR:', error, 'isFatal:', isFatal);
+      if (error?.message?.includes('ProfileScreen') || error?.stack?.includes('ProfileScreen')) {
+        console.log('👤 ERROR RELATED TO PROFILESCREEN - PREVENTING APP RESTART!');
+        // Don't treat ProfileScreen errors as fatal to prevent app restart
+        return false;
+      }
+    };
+
+    // @ts-ignore - React Native global error handler
+    if (global.ErrorUtils) {
+      global.ErrorUtils.setGlobalHandler(handleGlobalError);
+    }
+
+    return () => {
+      console.error = originalConsoleError;
+    };
+  }, []);
+
   return (
     <ErrorBoundary>
       <WagmiProvider config={wagmiConfig}>

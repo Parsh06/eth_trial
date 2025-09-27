@@ -4,324 +4,99 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
   Alert,
-  Image,
+  TouchableOpacity,
 } from 'react-native';
-import { useGame } from '../context/GameContext';
 import { MobileLayout } from '../components/layout/MobileLayout';
-import { NeoButton } from '../components/ui/NeoButton';
 import { NeoCard } from '../components/ui/NeoCard';
-import { ProgressBar } from '../components/ui/ProgressBar';
-import { Shimmer } from '../components/ui/Shimmer';
+import { NeoButton } from '../components/ui/NeoButton';
 import { colors } from '../utils/colors';
 import { typography } from '../utils/typography';
-import { useAccount, useEnsName, useEnsAvatar, useBalance } from 'wagmi';
 
 export const ProfileScreen: React.FC = () => {
-  const { handleDisconnectWallet, user, state } = useGame();
+  console.log('🏠 ProfileScreen: Rendering simple version');
 
-  // Wagmi hooks for wallet data with error handling
-  const { address, isConnected } = useAccount();
-  
-  // Use try-catch pattern for wagmi hooks to prevent errors
-  let ensName, ensLoading, avatar, avatarLoading, balance, balanceLoading;
-  
-  try {
-    const ensResult = useEnsName({ 
-      address: address as `0x${string}`
-    });
-    ensName = ensResult.data;
-    ensLoading = ensResult.isLoading;
-  } catch (error) {
-    console.warn('ENS name fetch error:', error);
-    ensName = null;
-    ensLoading = false;
-  }
-
-  try {
-    const avatarResult = useEnsAvatar({ 
-      name: ensName
-    });
-    avatar = avatarResult.data;
-    avatarLoading = avatarResult.isLoading;
-  } catch (error) {
-    console.warn('ENS avatar fetch error:', error);
-    avatar = null;
-    avatarLoading = false;
-  }
-
-  try {
-    const balanceResult = useBalance({ 
-      address: address as `0x${string}`
-    });
-    balance = balanceResult.data;
-    balanceLoading = balanceResult.isLoading;
-  } catch (error) {
-    console.warn('Balance fetch error:', error);
-    balance = null;
-    balanceLoading = false;
-  }
-
-  // Debug logging
-  React.useEffect(() => {
-    console.log('🏠 ProfileScreen: Mounted');
-    console.log('🏠 ProfileScreen: Game state:', state);
-    console.log('🏠 ProfileScreen: User data:', user ? 'Present' : 'None');
-    console.log('🏠 ProfileScreen: Wallet data:', { address, isConnected });
-    
-    return () => {
-      console.log('🏠 ProfileScreen: Unmounting');
-    };
-  }, []);
-
-  // Monitor wagmi state changes
-  React.useEffect(() => {
-    console.log('🔗 ProfileScreen: Wagmi state changed:', { address, isConnected });
-  }, [address, isConnected]);
-
-  // Helper display values
-  const displayName = ensName || (address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Guest User');
-  const avatarEmoji = '👤';
-
-  // Handlers
-  const handleDisconnect = () => {
-    Alert.alert(
-      'Disconnect Wallet',
-      'Are you sure you want to disconnect your wallet? You can reconnect anytime.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Disconnect', style: 'destructive', onPress: handleDisconnectWallet },
-      ]
-    );
+  const handleWalletAction = () => {
+    Alert.alert('Wallet Action', 'This feature is coming soon!');
   };
 
   const handleExportData = () => {
-    Alert.alert('Export Data', 'Your game data will be exported as a JSON file.', [{ text: 'OK' }]);
+    Alert.alert('Export Data', 'This feature is coming soon!');
   };
-
-  const handleDeleteAccount = () => {
-    Alert.alert(
-      'Delete Account',
-      'This will permanently delete your account and all associated data. This action cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => Alert.alert('Account Deleted', 'Your account has been deleted.'),
-        },
-      ]
-    );
-  };
-
-  const settingsOptions = [
-    { title: 'Notifications', description: 'Manage notification preferences', icon: '🔔', onPress: () => Alert.alert('Notifications', 'Notification settings coming soon!') },
-    { title: 'AR Preferences', description: 'Configure AR camera settings', icon: '📱', onPress: () => Alert.alert('AR Settings', 'AR preferences coming soon!') },
-    { title: 'Privacy', description: 'Control your privacy settings', icon: '🔒', onPress: () => Alert.alert('Privacy', 'Privacy settings coming soon!') },
-    { title: 'Support', description: 'Get help and contact support', icon: '❓', onPress: () => Alert.alert('Support', 'Contact support at help@starquest.com') },
-  ];
-
-  // If game state is not main, show loading
-  if (state.screen !== 'main') {
-    return (
-      <MobileLayout>
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Loading Profile...</Text>
-        </View>
-      </MobileLayout>
-    );
-  }
 
   return (
     <MobileLayout>
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        {/* Profile Header */}
+        {/* Header */}
         <View style={styles.header}>
           <View style={styles.avatarContainer}>
-            {avatarLoading ? (
-              <Shimmer width={80} height={80} borderRadius={40} />
-            ) : avatar ? (
-              <Image
-                source={{ uri: avatar }}
-                style={styles.avatarImage}
-                onError={() => console.warn('Failed to load ENS avatar')}
-              />
-            ) : (
-              <Text style={styles.avatar}>{avatarEmoji}</Text>
-            )}
+            <Text style={styles.avatar}>👤</Text>
           </View>
-
-          {ensLoading ? (
-            <Shimmer width={150} height={28} style={styles.shimmerMargin} />
-          ) : (
-            <Text style={styles.username}>{displayName}</Text>
-          )}
-
-          {address ? (
-            <Text style={styles.walletAddress}>{address}</Text>
-          ) : (
-            <Text style={styles.walletAddress}>Guest User</Text>
-          )}
-
-          {balanceLoading ? (
-            <Shimmer width={120} height={20} style={styles.shimmerMargin} />
-          ) : balance ? (
-            <Text style={styles.walletBalance}>
-              {parseFloat(balance.formatted).toFixed(4)} {balance.symbol}
-            </Text>
-          ) : null}
-
-          {/* Connection Status */}
-          <View style={styles.connectionStatus}>
-            <View style={[styles.statusDot, { backgroundColor: isConnected ? colors.electricGreen : colors.error }]} />
-            <Text style={styles.statusText}>
-              {isConnected ? 'Wallet Connected' : 'Wallet Disconnected'}
-            </Text>
-          </View>
+          <Text style={styles.username}>StarQuest User</Text>
+          <Text style={styles.subtitle}>Cosmic Explorer</Text>
         </View>
 
-        {/* Stats Overview */}
+        {/* Stats Card */}
         <NeoCard style={styles.statsCard}>
           <Text style={styles.sectionTitle}>Your Statistics</Text>
           <View style={styles.statsGrid}>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{user?.stats.starsFound || 0}</Text>
+              <Text style={styles.statNumber}>5</Text>
               <Text style={styles.statLabel}>Stars Found</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{user?.stats.questsCompleted || 0}</Text>
+              <Text style={styles.statNumber}>3</Text>
               <Text style={styles.statLabel}>Quests Completed</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{user?.stats.nftsEarned || 0}</Text>
+              <Text style={styles.statNumber}>2</Text>
               <Text style={styles.statLabel}>NFTs Earned</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{user?.stats.streak || 0}</Text>
+              <Text style={styles.statNumber}>7</Text>
               <Text style={styles.statLabel}>Current Streak</Text>
             </View>
           </View>
         </NeoCard>
 
-        {/* Progress Section */}
-        <NeoCard style={styles.progressCard}>
-          <Text style={styles.sectionTitle}>Progress Overview</Text>
-          <View style={styles.progressItem}>
-            <Text style={styles.progressLabel}>Star Collection</Text>
-            <ProgressBar 
-              progress={user?.stats.starsFound || 0} 
-              maxProgress={12} 
-              color={colors.electricPurple} 
-            />
-            <Text style={styles.progressText}>
-              {user?.stats.starsFound || 0}/12 stars collected
-            </Text>
-          </View>
-          <View style={styles.progressItem}>
-            <Text style={styles.progressLabel}>Quest Mastery</Text>
-            <ProgressBar 
-              progress={user?.stats.questsCompleted || 0} 
-              maxProgress={20} 
-              color={colors.electricGreen} 
-            />
-            <Text style={styles.progressText}>
-              {user?.stats.questsCompleted || 0}/20 quests completed
-            </Text>
-          </View>
-          <View style={styles.progressItem}>
-            <Text style={styles.progressLabel}>NFT Collection</Text>
-            <ProgressBar 
-              progress={user?.stats.nftsEarned || 0} 
-              maxProgress={50} 
-              color={colors.electricOrange} 
-            />
-            <Text style={styles.progressText}>
-              {user?.stats.nftsEarned || 0}/50 NFTs earned
-            </Text>
-          </View>
-        </NeoCard>
-
-        {/* Achievements */}
-        <NeoCard style={styles.achievementsCard}>
-          <Text style={styles.sectionTitle}>Achievements</Text>
-          <View style={styles.achievementsList}>
-            {user?.achievements && user.achievements.length > 0 ? (
-              user.achievements.map((achievement, index) => (
-                <View key={index} style={styles.achievementItem}>
-                  <Text style={styles.achievementIcon}>🏆</Text>
-                  <Text style={styles.achievementText}>{achievement}</Text>
-                </View>
-              ))
-            ) : (
-              <View style={styles.noAchievements}>
-                <Text style={styles.noAchievementsText}>No achievements yet</Text>
-                <Text style={styles.noAchievementsSubtext}>Start completing quests to earn achievements!</Text>
-              </View>
-            )}
-          </View>
-        </NeoCard>
-
         {/* Wallet Info Card */}
-        {isConnected && (
-          <NeoCard style={styles.walletInfoCard}>
-            <Text style={styles.sectionTitle}>Wallet Information</Text>
-            <View style={styles.walletInfoItem}>
-              <Text style={styles.walletInfoLabel}>Network:</Text>
-              <Text style={styles.walletInfoValue}>Ethereum Mainnet</Text>
+        <NeoCard style={styles.walletCard}>
+          <Text style={styles.sectionTitle}>Wallet Information</Text>
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>Status:</Text>
+            <View style={styles.statusContainer}>
+              <View style={styles.statusDot} />
+              <Text style={styles.infoValue}>Connected</Text>
             </View>
-            <View style={styles.walletInfoItem}>
-              <Text style={styles.walletInfoLabel}>Address:</Text>
-              <Text style={styles.walletInfoValue} numberOfLines={1} ellipsizeMode="middle">
-                {address}
-              </Text>
-            </View>
-            {ensName && (
-              <View style={styles.walletInfoItem}>
-                <Text style={styles.walletInfoLabel}>ENS Name:</Text>
-                <Text style={styles.walletInfoValue}>{ensName}</Text>
-              </View>
-            )}
-          </NeoCard>
-        )}
+          </View>
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>Network:</Text>
+            <Text style={styles.infoValue}>Ethereum Mainnet</Text>
+          </View>
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>Address:</Text>
+            <Text style={styles.infoValue} numberOfLines={1}>
+              0x1234...5678
+            </Text>
+          </View>
+        </NeoCard>
 
-        {/* Settings */}
-        <Text style={styles.sectionTitle}>Settings</Text>
-        <View style={styles.settingsList}>
-          {settingsOptions.map((option, index) => (
-            <TouchableOpacity key={index} style={styles.settingItem} onPress={option.onPress}>
-              <Text style={styles.settingIcon}>{option.icon}</Text>
-              <View style={styles.settingContent}>
-                <Text style={styles.settingTitle}>{option.title}</Text>
-                <Text style={styles.settingDescription}>{option.description}</Text>
-              </View>
-              <Text style={styles.settingArrow}>›</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Account Actions */}
+        {/* Actions */}
         <NeoCard style={styles.actionsCard}>
           <Text style={styles.sectionTitle}>Account Actions</Text>
-          <NeoButton 
-            title="Export My Data" 
-            onPress={handleExportData} 
-            variant="outline" 
-            style={styles.actionButton} 
+          
+          <NeoButton
+            title="Wallet Settings"
+            onPress={handleWalletAction}
+            variant="outline"
+            style={styles.actionButton}
           />
-          {isConnected && (
-            <NeoButton 
-              title="Disconnect Wallet" 
-              onPress={handleDisconnect} 
-              variant="outline" 
-              style={styles.actionButton} 
-            />
-          )}
-          <NeoButton 
-            title="Delete Account" 
-            onPress={handleDeleteAccount} 
-            variant="outline" 
-            style={[styles.actionButton, styles.dangerButton]} 
+          
+          <NeoButton
+            title="Export Game Data"
+            onPress={handleExportData}
+            variant="outline"
+            style={styles.actionButton}
           />
         </NeoCard>
 
@@ -343,17 +118,6 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  loadingText: {
-    ...typography.body,
-    color: colors.foreground,
-    textAlign: 'center',
-  },
   header: {
     alignItems: 'center',
     marginBottom: 32,
@@ -368,16 +132,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 3,
     borderColor: colors.foreground,
-    shadowColor: colors.foreground,
-    shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 4,
-  },
-  avatarImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
   },
   avatar: {
     fontSize: 40,
@@ -389,35 +143,10 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     textAlign: 'center',
   },
-  walletAddress: {
-    ...typography.bodySmall,
+  subtitle: {
+    ...typography.body,
     color: colors.mutedForeground,
     textAlign: 'center',
-    marginBottom: 8,
-  },
-  walletBalance: {
-    ...typography.body,
-    color: colors.foreground,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-  connectionStatus: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 6,
-  },
-  statusText: {
-    ...typography.caption,
-    color: colors.mutedForeground,
-  },
-  shimmerMargin: {
-    marginBottom: 8,
   },
   statsCard: {
     marginBottom: 24,
@@ -452,124 +181,45 @@ const styles = StyleSheet.create({
     color: colors.mutedForeground,
     textAlign: 'center',
   },
-  progressCard: {
+  walletCard: {
     marginBottom: 24,
   },
-  progressItem: {
-    marginBottom: 16,
-  },
-  progressLabel: {
-    ...typography.body,
-    color: colors.foreground,
-    marginBottom: 8,
-    fontWeight: '600',
-  },
-  progressText: {
-    ...typography.caption,
-    color: colors.mutedForeground,
-    marginTop: 4,
-  },
-  achievementsCard: {
-    marginBottom: 24,
-  },
-  achievementsList: {
-    gap: 12,
-  },
-  achievementItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    backgroundColor: colors.muted,
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: colors.foreground,
-  },
-  achievementIcon: {
-    fontSize: 20,
-    marginRight: 12,
-  },
-  achievementText: {
-    ...typography.body,
-    color: colors.foreground,
-    fontWeight: '600',
-    flex: 1,
-  },
-  noAchievements: {
-    alignItems: 'center',
-    padding: 20,
-  },
-  noAchievementsText: {
-    ...typography.body,
-    color: colors.mutedForeground,
-    marginBottom: 4,
-  },
-  noAchievementsSubtext: {
-    ...typography.caption,
-    color: colors.mutedForeground,
-    textAlign: 'center',
-  },
-  walletInfoCard: {
-    marginBottom: 24,
-  },
-  walletInfoItem: {
+  infoItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    alignItems: 'center',
+    marginBottom: 12,
   },
-  walletInfoLabel: {
+  infoLabel: {
     ...typography.body,
     color: colors.mutedForeground,
     fontWeight: '600',
   },
-  walletInfoValue: {
+  infoValue: {
     ...typography.body,
     color: colors.foreground,
     flex: 1,
     textAlign: 'right',
     marginLeft: 16,
   },
-  settingsList: {
-    marginBottom: 24,
-  },
-  settingItem: {
+  statusContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    backgroundColor: colors.background,
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: colors.foreground,
-    marginBottom: 8,
-  },
-  settingIcon: {
-    fontSize: 20,
-    marginRight: 16,
-  },
-  settingContent: {
     flex: 1,
+    justifyContent: 'flex-end',
   },
-  settingTitle: {
-    ...typography.body,
-    color: colors.foreground,
-    marginBottom: 4,
-    fontWeight: '600',
-  },
-  settingDescription: {
-    ...typography.caption,
-    color: colors.mutedForeground,
-  },
-  settingArrow: {
-    fontSize: 20,
-    color: colors.mutedForeground,
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.electricGreen,
+    marginRight: 6,
   },
   actionsCard: {
     marginBottom: 24,
   },
   actionButton: {
     marginBottom: 12,
-  },
-  dangerButton: {
-    borderColor: colors.error,
   },
   infoCard: {
     alignItems: 'center',

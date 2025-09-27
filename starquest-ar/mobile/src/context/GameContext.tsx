@@ -180,12 +180,18 @@ function gameReducer(state: AppState, action: GameAction): AppState {
       console.log('🔄 GameReducer: Returning restore state:', restoreState);
       return restoreState;
     case 'TAB_CHANGE':
+      console.log('🔄 GameReducer: TAB_CHANGE received - tab:', action.tab, 'current state:', state);
       if (state.screen === "main") {
-        const newState = { ...state, activeTab: action.tab };
-        console.log('🔄 GameReducer: Tab changed to:', action.tab, 'New state:', newState);
-        return newState;
+        try {
+          const newState = { ...state, activeTab: action.tab };
+          console.log('✅ GameReducer: Tab changed successfully to:', action.tab, 'New state:', newState);
+          return newState;
+        } catch (error) {
+          console.error('🔴 GameReducer: Error during tab change:', error);
+          return state;
+        }
       }
-      console.log('🔄 GameReducer: Tab change ignored - not in main screen. Current screen:', state.screen);
+      console.log('⚠️ GameReducer: Tab change ignored - not in main screen. Current screen:', state.screen);
       return state;
     case 'CHALLENGE_SELECT':
       if (state.screen === "main") {
@@ -223,15 +229,26 @@ export function GameProvider({ children }: { children: ReactNode }) {
   // Initialize data and check for saved session on mount
   useEffect(() => {
     // Only initialize once
+    console.log('🔄 GameContext: useEffect called, isInitialized:', isInitialized);
     if (!isInitialized) {
+      console.log('⚠️ GameContext: App is being initialized/re-initialized!');
+      console.log('📍 Current state before init:', state);
+      
+      // Double check - don't reinitialize if we're already in a main state
+      if (state.screen === 'main') {
+        console.log('❗ WARNING: Preventing re-initialization while in main screen!');
+        setIsInitialized(true);
+        return;
+      }
+      
       initializeApp();
     }
-  }, [isInitialized]);
+  }, [isInitialized]); // Remove state.screen dependency to prevent re-initialization
 
   const initializeApp = async () => {
     try {
       setLoading(true);
-      console.log('🚀 GameContext: Starting app initialization...');
+      console.log('🚀 GameContext: Starting app initialization...', new Error().stack?.split('\n')[1]);
       
       // Check for existing authentication
       const savedUserData = await AsyncStorage.getItem('user_data');
@@ -402,8 +419,24 @@ export function GameProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const handleTabChange = (tab: string) => {
-    console.log('🔄 GameContext: Tab change requested:', tab);
-    dispatch({ type: 'TAB_CHANGE', tab });
+    try {
+      // Validate tab value
+      if (!tab || typeof tab !== 'string') {
+        console.error('GameContext: Invalid tab value:', tab);
+        return;
+      }
+      
+      // Safety check - don't allow tab changes if not in main state
+      if (state.screen !== 'main') {
+        console.error('GameContext: Cannot change tab when not in main screen! Current screen:', state.screen);
+        return;
+      }
+      
+      console.log('GameContext: Changing tab to:', tab);
+      dispatch({ type: 'TAB_CHANGE', tab });
+    } catch (error) {
+      console.error('GameContext: Error in handleTabChange:', error);
+    }
   };
 
   const handleChallengeSelect = (id: string) => {

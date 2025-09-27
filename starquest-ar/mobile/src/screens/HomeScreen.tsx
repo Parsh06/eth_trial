@@ -6,8 +6,10 @@ import {
   ScrollView,
   Dimensions,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAccount, useBalance, useEnsName } from 'wagmi';
 import { useGame } from '../context/GameContext';
 import { MobileLayout } from '../components/layout/MobileLayout';
 import { NeoButton } from '../components/ui/NeoButton';
@@ -20,11 +22,16 @@ const { width } = Dimensions.get('window');
 
 export const HomeScreen: React.FC = () => {
   const { user, stars, quests, handleTabChange, handleChallengeSelect } = useGame();
+  const { address, isConnected, chain } = useAccount();
+  const { data: balance, isLoading: balanceLoading } = useBalance({ address });
+  const { data: ensName, isLoading: ensLoading } = useEnsName({ address });
 
   const completedStars = stars.filter((star) => star.status === 'completed').length;
   const totalStars = stars.length;
   const completedQuests = quests.filter((quest) => quest.completed).length;
   const totalQuests = quests.length;
+
+  console.log('🏠 HomeScreen: Wallet data', { isConnected, hasBalance: !!balance, ensName });
 
   const quickActions = [
     {
@@ -82,13 +89,37 @@ export const HomeScreen: React.FC = () => {
         >
           <View style={styles.heroContent}>
             <Text style={styles.heroTitle}>Welcome back!</Text>
-            <Text style={styles.heroSubtitle}>{user?.username || 'StarHunter'}</Text>
+            <Text style={styles.heroSubtitle}>
+              {ensLoading ? 'Loading...' : ensName || user?.username || 'StarHunter'}
+            </Text>
             <Text style={styles.heroDescription}>
               Ready for your next cosmic adventure?
             </Text>
-            {user?.walletAddress && (
-              <Text style={styles.walletAddress}>
-                {user.walletAddress.slice(0, 6)}...{user.walletAddress.slice(-4)}
+            
+            {/* Wallet Information */}
+            {isConnected && address && (
+              <View style={styles.walletInfo}>
+                <Text style={styles.walletAddress}>
+                  {address.slice(0, 6)}...{address.slice(-4)}
+                </Text>
+                {balanceLoading ? (
+                  <ActivityIndicator size="small" color={colors.foreground} style={styles.balanceLoader} />
+                ) : balance ? (
+                  <Text style={styles.walletBalance}>
+                    {parseFloat(balance.formatted).toFixed(4)} {balance.symbol}
+                  </Text>
+                ) : null}
+                {chain && (
+                  <Text style={styles.networkInfo}>
+                    🔗 Connected to {chain.name}
+                  </Text>
+                )}
+              </View>
+            )}
+            
+            {!isConnected && (
+              <Text style={styles.disconnectedText}>
+                ⚠️ Wallet not connected
               </Text>
             )}
           </View>
@@ -280,13 +311,44 @@ const styles = StyleSheet.create({
     opacity: 0.9,
     lineHeight: 24,
   },
+  walletInfo: {
+    alignItems: 'center',
+    marginTop: 16,
+    gap: 8,
+  },
   walletAddress: {
     ...typography.caption,
     color: '#FFFFFF',
     textAlign: 'center',
-    opacity: 0.8,
-    marginTop: 12,
+    opacity: 0.9,
     fontFamily: 'monospace',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  walletBalance: {
+    ...typography.bodySmall,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    fontWeight: '600',
+    opacity: 0.95,
+  },
+  networkInfo: {
+    ...typography.caption,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    opacity: 0.8,
+  },
+  balanceLoader: {
+    marginVertical: 4,
+  },
+  disconnectedText: {
+    ...typography.caption,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    opacity: 0.7,
+    marginTop: 12,
     backgroundColor: 'rgba(255,255,255,0.1)',
     paddingHorizontal: 12,
     paddingVertical: 6,
