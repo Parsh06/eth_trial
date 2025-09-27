@@ -1,4 +1,4 @@
-import { Platform, Alert } from 'react-native';
+import { Platform, Alert, Linking } from 'react-native';
 import { ENV } from '../config/environment';
 
 export interface WalletInfo {
@@ -75,19 +75,81 @@ export class MetaMaskService {
   }
 
   private async connectMobileWallet(): Promise<WalletInfo> {
-    // For mobile, simulate wallet connection
-    // In a real implementation, you would use WalletConnect or similar
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const mockAddress = '0x' + Math.random().toString(16).substr(2, 40);
-        resolve({
-          address: mockAddress,
-          balance: (Math.random() * 10).toFixed(4),
-          chainId: '0x1',
-          isConnected: true,
+    try {
+      console.log('Attempting mobile wallet connection...');
+      
+      // Check if MetaMask mobile app is installed
+      const metamaskUrl = 'metamask://';
+      const canOpen = await Linking.canOpenURL(metamaskUrl);
+      
+      if (canOpen) {
+        // Try to open MetaMask mobile app
+        console.log('MetaMask app detected, attempting deep link...');
+        
+        // For now, we'll simulate a successful connection
+        // In production, you'd use WalletConnect or MetaMask Mobile SDK
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            // Generate a more realistic test address
+            const testAddress = '0x742d35Cc6834C0532925a3b8A9C9b0a4c0c5e1a4';
+            resolve({
+              address: testAddress,
+              balance: '1.2345',
+              chainId: '0x1', // Ethereum mainnet
+              isConnected: true,
+            });
+          }, 2000); // Simulate connection time
         });
-      }, 1000);
-    });
+      } else {
+        // MetaMask not installed, provide installation option
+        console.log('MetaMask mobile app not detected');
+        
+        return new Promise((resolve, reject) => {
+          Alert.alert(
+            'MetaMask Required',
+            'Please install MetaMask mobile app to connect your wallet.',
+            [
+              {
+                text: 'Cancel',
+                style: 'cancel',
+                onPress: () => reject(new Error('User cancelled wallet installation'))
+              },
+              {
+                text: 'Install MetaMask',
+                onPress: async () => {
+                  try {
+                    const appStoreUrl = Platform.OS === 'ios' 
+                      ? 'https://apps.apple.com/app/metamask/id1438144202'
+                      : 'https://play.google.com/store/apps/details?id=io.metamask';
+                    
+                    await Linking.openURL(appStoreUrl);
+                    reject(new Error('Please install MetaMask and try again'));
+                  } catch (linkError) {
+                    reject(new Error('Could not open app store'));
+                  }
+                }
+              },
+              {
+                text: 'Use Demo Mode',
+                onPress: () => {
+                  // For development/demo purposes
+                  const demoAddress = '0x' + Math.random().toString(16).substr(2, 40);
+                  resolve({
+                    address: demoAddress,
+                    balance: (Math.random() * 10).toFixed(4),
+                    chainId: '0x1',
+                    isConnected: true,
+                  });
+                }
+              }
+            ]
+          );
+        });
+      }
+    } catch (error) {
+      console.error('Mobile wallet connection error:', error);
+      throw new Error(`Mobile wallet connection failed: ${error.message}`);
+    }
   }
 
   async disconnectWallet(): Promise<void> {
