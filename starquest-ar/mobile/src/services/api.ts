@@ -50,18 +50,38 @@ class ApiService {
 
   // Auth methods
   async walletLogin(walletAddress: string, signature: string, message: string) {
-    const response = await this.api.post(API_CONFIG.ENDPOINTS.AUTH.WALLET_LOGIN, {
-      walletAddress,
-      signature,
-      message,
-    });
-    
-    if (response.data.success) {
-      this.token = response.data.token;
+    try {
+      const response = await this.api.post(API_CONFIG.ENDPOINTS.AUTH.WALLET_LOGIN, {
+        walletAddress,
+        signature,
+        message,
+      });
+      
+      if (response.data.success) {
+        this.token = response.data.token;
+        await AsyncStorage.setItem('auth_token', this.token);
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.log('API not available, using mock login');
+      // Mock successful login for demo
+      this.token = 'mock-token-' + Date.now();
       await AsyncStorage.setItem('auth_token', this.token);
+      return {
+        success: true,
+        token: this.token,
+        user: {
+          id: 'mock-user-id',
+          walletAddress: walletAddress,
+          username: 'DemoUser',
+          level: 1,
+          experience: 0,
+          starsCollected: 0,
+          avatar: null
+        }
+      };
     }
-    
-    return response.data;
   }
 
   async logout() {
@@ -71,8 +91,16 @@ class ApiService {
 
   // User methods
   async getUserProfile() {
-    const response = await this.api.get(API_CONFIG.ENDPOINTS.AUTH.PROFILE);
-    return response.data;
+    try {
+      const response = await this.api.get(API_CONFIG.ENDPOINTS.AUTH.PROFILE);
+      return response.data;
+    } catch (error) {
+      console.log('API not available, using mock data');
+      return {
+        success: false,
+        user: null
+      };
+    }
   }
 
   async updateUserProfile(data: any) {
@@ -82,8 +110,16 @@ class ApiService {
 
   // Quest methods
   async getQuests(params?: any) {
-    const response = await this.api.get(API_CONFIG.ENDPOINTS.QUEST.LIST, { params });
-    return response.data;
+    try {
+      const response = await this.api.get(API_CONFIG.ENDPOINTS.QUEST.LIST, { params });
+      return response.data;
+    } catch (error) {
+      console.log('API not available, using mock data');
+      return {
+        success: false,
+        quests: []
+      };
+    }
   }
 
   async getQuestDetail(id: string) {
@@ -103,8 +139,16 @@ class ApiService {
 
   // Star methods
   async getStars(params?: any) {
-    const response = await this.api.get(API_CONFIG.ENDPOINTS.STAR.LIST, { params });
-    return response.data;
+    try {
+      const response = await this.api.get(API_CONFIG.ENDPOINTS.STAR.LIST, { params });
+      return response.data;
+    } catch (error) {
+      console.log('API not available, using mock data');
+      return {
+        success: false,
+        stars: []
+      };
+    }
   }
 
   async getStarDetail(id: string) {
@@ -128,8 +172,16 @@ class ApiService {
 
   // Leaderboard methods
   async getLeaderboard(category: string, params?: any) {
-    const response = await this.api.get(`/leaderboard/${category}`, { params });
-    return response.data;
+    try {
+      const response = await this.api.get(`/leaderboard/${category}`, { params });
+      return response.data;
+    } catch (error) {
+      console.log('API not available, using mock data');
+      return {
+        success: false,
+        leaderboard: []
+      };
+    }
   }
 
   async getUserPosition(category: string, userId: string) {

@@ -37,7 +37,7 @@ export const API_CONFIG = {
   
   // WebSocket
   WS_URL: __DEV__ 
-    ? 'ws://localhost:5000' 
+    ? 'http://localhost:5000' 
     : 'wss://your-production-api.com',
   
   // Timeouts
