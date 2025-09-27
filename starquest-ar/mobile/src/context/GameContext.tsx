@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppState, User, Star, Challenge, Quest, LeaderboardEntry, GameContextType } from '../types';
 import apiService from '../services/api';
 import websocketService from '../services/websocket';
@@ -241,6 +242,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   };
 
   const handleLandingComplete = () => {
+    console.log('Landing complete button clicked!');
     dispatch({ type: 'LANDING_COMPLETE' });
   };
 
@@ -253,11 +255,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       setError(null);
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Simulate API delay for user creation/authentication
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Create dummy user data
-      const dummyUser = {
+      // Create user data with real wallet address
+      const userData = {
         id: 'user-' + Date.now(),
         walletAddress: address,
         username: 'StarHunter' + Math.floor(Math.random() * 1000),
@@ -270,8 +272,18 @@ export function GameProvider({ children }: { children: ReactNode }) {
         achievements: ['First Star', 'Quick Learner', 'Streak Master']
       };
       
-      setUser(dummyUser);
+      setUser(userData);
+      console.log('Wallet connected successfully, navigating to home...');
       dispatch({ type: 'WALLET_CONNECT', address });
+      
+      // Store user data in AsyncStorage for persistence
+      try {
+        await AsyncStorage.setItem('user_data', JSON.stringify(userData));
+        await AsyncStorage.setItem('wallet_address', address);
+        console.log('User data stored successfully');
+      } catch (storageError) {
+        console.warn('Failed to store user data:', storageError);
+      }
       
     } catch (error) {
       console.error('Wallet connect error:', error);

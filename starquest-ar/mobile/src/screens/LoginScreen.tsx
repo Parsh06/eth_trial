@@ -15,6 +15,7 @@ import { NeoButton } from '../components/ui/NeoButton';
 import { NeoCard } from '../components/ui/NeoCard';
 import { colors } from '../utils/colors';
 import { typography } from '../utils/typography';
+import { metaMaskService, WalletInfo } from '../services/MetaMaskService';
 
 const { width } = Dimensions.get('window');
 
@@ -44,14 +45,47 @@ export const LoginScreen: React.FC = () => {
     try {
       setIsConnecting(true);
       
-      // Use dummy data for demo
-      const dummyAddress = '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6';
-      await handleWalletConnect(dummyAddress);
+      // Check if MetaMask is available
+      if (!metaMaskService.isWalletInstalled()) {
+        Alert.alert(
+          'MetaMask Not Found',
+          'Please install MetaMask browser extension or mobile app to continue.',
+          [
+            { text: 'OK', style: 'default' },
+            { 
+              text: 'Install MetaMask', 
+              style: 'default',
+              onPress: () => {
+                // Open MetaMask installation page
+                if (Platform.OS === 'web') {
+                  window.open('https://metamask.io/download/', '_blank');
+                }
+              }
+            }
+          ]
+        );
+        return;
+      }
+
+      // Connect to MetaMask
+      const walletInfo: WalletInfo = await metaMaskService.connectWallet();
+      
+      // Sign a message for authentication
+      const message = `Welcome to StarQuest AR!\n\nPlease sign this message to authenticate your wallet.\n\nTimestamp: ${Date.now()}`;
+      const signature = await metaMaskService.signMessage(message);
+      
+      // Connect to the app
+      await handleWalletConnect(walletInfo.address);
+      
+      // Navigation will happen automatically via GameContext
+      console.log('Wallet connected, navigation should happen automatically');
+      
     } catch (error) {
       console.error('MetaMask connection error:', error);
       Alert.alert(
         'Connection Failed',
-        'Please try again.'
+        error.message || 'Failed to connect to MetaMask. Please try again.',
+        [{ text: 'OK', style: 'default' }]
       );
     } finally {
       setIsConnecting(false);
@@ -61,9 +95,18 @@ export const LoginScreen: React.FC = () => {
   const connectWalletConnect = async () => {
     try {
       setIsConnecting(true);
-      // Use dummy data for demo
-      const dummyAddress = '0x8ba1f109551bD432803012645Hac136c';
-      await handleWalletConnect(dummyAddress);
+      
+      // For now, use MetaMask as fallback for WalletConnect
+      // In a real implementation, you would use WalletConnect SDK
+      Alert.alert(
+        'WalletConnect',
+        'WalletConnect integration is coming soon! For now, please use MetaMask.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Use MetaMask', style: 'default', onPress: connectMetaMask }
+        ]
+      );
+      
     } catch (error) {
       console.error('WalletConnect error:', error);
       Alert.alert('Connection Failed', 'Please try again.');

@@ -111,14 +111,21 @@ export const NeoButton: React.FC<NeoButtonProps> = ({
   const ButtonContent = () => {
     if (variant === 'gradient' && gradient) {
       return (
-        <LinearGradient
-          colors={gradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={getButtonStyle()}
+        <TouchableOpacity
+          onPress={onPress}
+          disabled={disabled}
+          activeOpacity={0.8}
+          {...props}
         >
-          <Text style={getTextStyle()}>{title}</Text>
-        </LinearGradient>
+          <LinearGradient
+            colors={gradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[getButtonStyle(), { flex: 1 }]}
+          >
+            <Text style={getTextStyle()}>{title}</Text>
+          </LinearGradient>
+        </TouchableOpacity>
       );
     }
 

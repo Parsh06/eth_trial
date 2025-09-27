@@ -43,6 +43,7 @@ const AppContent: React.FC = () => {
 
   // Render screens based on state
   const renderScreen = () => {
+    console.log('App.tsx: Rendering screen:', state.screen, 'activeTab:', state.screen === 'main' ? state.activeTab : 'N/A');
     switch (state.screen) {
       case "preloader":
         return <Preloader onComplete={handlePreloaderComplete} />;
