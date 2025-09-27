@@ -11,6 +11,8 @@ import {
   Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAppKit } from '@reown/appkit-wagmi-react-native';
+import { useAccount, useSignMessage } from 'wagmi';
 import { useGame } from '../context/GameContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NeoButton } from '../components/ui/NeoButton';
@@ -23,6 +25,9 @@ const { width } = Dimensions.get('window');
 
 export const LoginScreen: React.FC = () => {
   const { handleWalletConnect, loading, error } = useGame();
+  const { open } = useAppKit();
+  const { address, isConnected } = useAccount();
+  const { signMessageAsync } = useSignMessage();
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('');
   const [fadeAnim] = useState(new Animated.Value(0));
@@ -47,85 +52,64 @@ export const LoginScreen: React.FC = () => {
   const connectMetaMask = async () => {
     try {
       setIsConnecting(true);
-      setConnectionStatus('Checking MetaMask availability...');
+      setConnectionStatus('Opening wallet connection...');
       
-      // Check if MetaMask is available
-      if (!metaMaskService.isWalletInstalled()) {
-        setConnectionStatus('MetaMask not found');
-        Alert.alert(
-          'MetaMask Not Found',
-          Platform.OS === 'web' 
-            ? 'Please install MetaMask browser extension to continue.'
-            : 'Please install MetaMask mobile app to continue.',
-          [
-            { text: 'Cancel', style: 'cancel' },
-            { 
-              text: 'Install MetaMask', 
-              style: 'default',
-              onPress: () => {
-                // Open MetaMask installation page
-                if (Platform.OS === 'web') {
-                  window.open('https://metamask.io/download/', '_blank');
-                } else {
-                  const appStoreUrl = Platform.OS === 'ios' 
-                    ? 'https://apps.apple.com/app/metamask/id1438144202'
-                    : 'https://play.google.com/store/apps/details?id=io.metamask';
-                  
-                  import('react-native').then(({ Linking }) => {
-                    Linking.openURL(appStoreUrl).catch(err => 
-                      console.error('Failed to open app store:', err)
-                    );
-                  });
-                }
-              }
-            }
-          ]
-        );
-        return;
-      }
-
-      // Connect to MetaMask
-      setConnectionStatus('Connecting to wallet...');
-      const walletInfo: WalletInfo = await metaMaskService.connectWallet();
-      
-      setConnectionStatus(`Connected: ${walletInfo.address.substring(0, 6)}...${walletInfo.address.substring(38)}`);
-      
-      // Sign a message for authentication
-      setConnectionStatus('Requesting signature...');
-      const message = `Welcome to StarQuest AR!\n\nPlease sign this message to authenticate your wallet.\n\nWallet: ${walletInfo.address}\nTimestamp: ${Date.now()}`;
-      const signature = await metaMaskService.signMessage(message);
-      
-      // Connect to the app with signature and message
-      setConnectionStatus('Authenticating with StarQuest...');
-      await handleWalletConnect(walletInfo.address, signature, message);
-      
-      setConnectionStatus('Welcome to StarQuest AR! 🌟');
-      console.log('Wallet connected successfully with signature verification');
+      // Use AppKit to open the modal
+      open();
       
     } catch (error: any) {
-      console.error('MetaMask connection error:', error);
+      console.error('AppKit connection error:', error);
       setConnectionStatus('');
-      
-      // Handle specific error types
-      let errorMessage = 'Failed to connect to MetaMask. Please try again.';
-      let errorTitle = 'Connection Failed';
-      
-      if (error.message.includes('User rejected')) {
-        errorMessage = 'Wallet connection was cancelled. Please try again to continue.';
-        errorTitle = 'Connection Cancelled';
-      } else if (error.message.includes('signature')) {
-        errorMessage = 'Signature verification failed. Please try signing the message again.';
-        errorTitle = 'Signature Failed';
-      } else if (error.message.includes('network')) {
-        errorMessage = 'Network error. Please check your internet connection and try again.';
-        errorTitle = 'Network Error';
-      }
-      
-      Alert.alert(errorTitle, errorMessage, [{ text: 'OK', style: 'default' }]);
+      Alert.alert('Connection Failed', 'Failed to open wallet connection. Please try again.');
     } finally {
       setIsConnecting(false);
     }
   };
+
+  // Handle successful wallet connection
+  useEffect(() => {
+    if (isConnected && address) {
+      const authenticateWallet = async () => {
+        try {
+          setIsConnecting(true);
+          setConnectionStatus('Requesting signature for authentication...');
+          
+          // Sign a message for authentication
+          const message = `Welcome to StarQuest AR!\n\nPlease sign this message to authenticate your wallet.\n\nWallet: ${address}\nTimestamp: ${Date.now()}`;
+          const signature = await signMessageAsync({ 
+            account: address as `0x${string}`,
+            message 
+          });
+          
+          // Connect to the app with signature and message
+          setConnectionStatus('Authenticating with StarQuest...');
+          await handleWalletConnect(address, signature, message);
+          
+          setConnectionStatus('Welcome to StarQuest AR! 🌟');
+          console.log('Wallet connected successfully with signature verification');
+          
+        } catch (error: any) {
+          console.error('Authentication error:', error);
+          setConnectionStatus('');
+          
+          // Handle specific error types
+          let errorMessage = 'Failed to authenticate wallet. Please try again.';
+          let errorTitle = 'Authentication Failed';
+          
+          if (error.message.includes('User rejected')) {
+            errorMessage = 'Signature was cancelled. Please try again to complete authentication.';
+            errorTitle = 'Signature Cancelled';
+          }
+          
+          Alert.alert(errorTitle, errorMessage, [{ text: 'OK', style: 'default' }]);
+        } finally {
+          setIsConnecting(false);
+        }
+      };
+
+      authenticateWallet();
+    }
+  }, [isConnected, address, signMessageAsync, handleWalletConnect]);
 
   const connectWalletConnect = async () => {
     try {
@@ -213,7 +197,7 @@ export const LoginScreen: React.FC = () => {
 
           {/* Demo Mode Card - for development */}
           {__DEV__ && (
-            <NeoCard style={[styles.walletCard, styles.demoCard]}>
+            <NeoCard style={{...styles.walletCard, ...styles.demoCard}}>
               <View style={styles.walletHeader}>
                 <Text style={styles.walletIcon}>⚡</Text>
                 <Text style={styles.walletTitle}>Demo Mode</Text>
@@ -242,7 +226,7 @@ export const LoginScreen: React.FC = () => {
                     setIsConnecting(false);
                   }
                 }}
-                variant="secondary"
+                variant="default"
                 size="large"
                 disabled={isConnecting || loading}
                 style={styles.connectButton}
@@ -250,6 +234,25 @@ export const LoginScreen: React.FC = () => {
             </NeoCard>
           )}
         </View>
+
+        {/* Debug Options - only in development */}
+        {__DEV__ && (
+          <View style={styles.debugContainer}>
+            <TouchableOpacity 
+              style={styles.debugButton}
+              onPress={async () => {
+                try {
+                  await AsyncStorage.clear();
+                  Alert.alert('Cache Cleared', 'All cached data has been removed. Restart the app to test fresh login.');
+                } catch (error) {
+                  Alert.alert('Error', 'Failed to clear cache');
+                }
+              }}
+            >
+              <Text style={styles.debugButtonText}>Clear Cache (Debug)</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Features */}
         <View style={styles.featuresContainer}>
@@ -362,6 +365,23 @@ const styles = StyleSheet.create({
   demoCard: {
     borderColor: colors.electricGreen,
     backgroundColor: colors.electricGreen + '05',
+  },
+  debugContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  debugButton: {
+    backgroundColor: colors.error + '20',
+    borderColor: colors.error,
+    borderWidth: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  debugButtonText: {
+    color: colors.error,
+    fontSize: 12,
+    fontWeight: '600',
   },
   featuresContainer: {
     marginBottom: 20,

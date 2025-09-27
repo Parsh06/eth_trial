@@ -255,7 +255,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       setError(null);
       
-      console.log('Connecting wallet:', address);
+      console.log('🔗 handleWalletConnect called:', {
+        address: address,
+        hasSignature: !!signature,
+        hasMessage: !!message,
+        timestamp: new Date().toISOString()
+      });
       
       // Try to authenticate with the backend API
       let userData;

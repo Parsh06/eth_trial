@@ -86,7 +86,7 @@ export interface GameContextType {
   handlePreloaderComplete: () => void;
   handleLandingComplete: () => void;
   handleOnboardingComplete: () => void;
-  handleWalletConnect: (address: string) => void;
+  handleWalletConnect: (address: string, signature?: string, message?: string) => void;
   handleTabChange: (tab: string) => void;
   handleChallengeSelect: (id: string) => void;
   handleChallengeComplete: (success: boolean) => void;
