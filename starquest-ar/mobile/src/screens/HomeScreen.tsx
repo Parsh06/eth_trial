@@ -4,7 +4,11 @@ import {
   Text,
   StyleSheet,
   ScrollView,
+  Dimensions,
+  TouchableOpacity,
+  ImageBackground,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useGame } from '../context/GameContext';
 import { MobileLayout } from '../components/layout/MobileLayout';
 import { NeoButton } from '../components/ui/NeoButton';
@@ -12,6 +16,8 @@ import { NeoCard } from '../components/ui/NeoCard';
 import { ProgressBar } from '../components/ui/ProgressBar';
 import { colors } from '../utils/colors';
 import { typography } from '../utils/typography';
+
+const { width } = Dimensions.get('window');
 
 export const HomeScreen: React.FC = () => {
   const { user, stars, quests, handleTabChange, handleChallengeSelect } = useGame();
@@ -26,71 +32,146 @@ export const HomeScreen: React.FC = () => {
       title: 'Explore Map',
       description: 'Find new stars',
       icon: '🗺️',
-      color: colors.electricPurple,
+      gradient: [colors.electricPurple, '#A855F7'],
       onPress: () => handleTabChange('map'),
     },
     {
       title: 'View Quests',
       description: 'Complete challenges',
       icon: '⚔️',
-      color: colors.electricGreen,
+      gradient: [colors.electricGreen, '#059669'],
       onPress: () => handleTabChange('quests'),
     },
     {
       title: 'Leaderboard',
       description: 'See rankings',
       icon: '🏆',
-      color: colors.electricOrange,
+      gradient: [colors.electricOrange, '#D97706'],
       onPress: () => handleTabChange('leaderboard'),
+    },
+    {
+      title: 'Profile',
+      description: 'View stats',
+      icon: '👤',
+      gradient: [colors.electricPink, '#DB2777'],
+      onPress: () => handleTabChange('profile'),
     },
   ];
 
   const recentActivity = [
-    { id: '1', action: 'Completed Alpha Star', time: '2 hours ago', icon: '⭐' },
-    { id: '2', action: 'Earned Beta NFT', time: '1 day ago', icon: '🎁' },
-    { id: '3', action: 'Streak: 5 days', time: '2 days ago', icon: '🔥' },
+    { id: '1', action: 'Completed Alpha Star', time: '2 hours ago', icon: '⭐', color: colors.electricPurple },
+    { id: '2', action: 'Earned Beta NFT', time: '1 day ago', icon: '🎁', color: colors.electricGreen },
+    { id: '3', action: 'Streak: 5 days', time: '2 days ago', icon: '🔥', color: colors.electricOrange },
+    { id: '4', action: 'New Quest Available', time: '3 days ago', icon: '⚔️', color: colors.electricPink },
+  ];
+
+  const achievements = [
+    { id: '1', title: 'First Star', icon: '⭐', unlocked: true },
+    { id: '2', title: 'Quest Master', icon: '⚔️', unlocked: true },
+    { id: '3', title: 'NFT Collector', icon: '🎁', unlocked: false },
+    { id: '4', title: 'Streak Master', icon: '🔥', unlocked: true },
   ];
 
   return (
     <MobileLayout>
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        {/* Welcome Header */}
-        <View style={styles.header}>
-          <Text style={styles.welcomeText}>
-            Welcome back, {user?.username || 'Star Hunter'}! 👋
-          </Text>
-          <Text style={styles.subtitle}>
-            Ready for your next adventure?
-          </Text>
-        </View>
+        {/* Hero Section with Gradient Background */}
+        <LinearGradient
+          colors={[colors.electricPurple, colors.electricPink, colors.electricOrange]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.heroSection}
+        >
+          <View style={styles.heroContent}>
+            <Text style={styles.heroTitle}>🌟 StarQuest AR</Text>
+            <Text style={styles.heroSubtitle}>
+              Welcome back, {user?.username || 'Star Hunter'}! 👋
+            </Text>
+            <Text style={styles.heroDescription}>
+              Ready for your next cosmic adventure?
+            </Text>
+            {user?.walletAddress && (
+              <Text style={styles.walletAddress}>
+                Wallet: {user.walletAddress.slice(0, 6)}...{user.walletAddress.slice(-4)}
+              </Text>
+            )}
+          </View>
+        </LinearGradient>
 
-        {/* Stats Cards */}
+        {/* Stats Cards with Enhanced Design */}
         <View style={styles.statsContainer}>
-          <NeoCard style={[styles.statCard, { backgroundColor: colors.electricPurple }]}>
+          <LinearGradient
+            colors={[colors.electricPurple, '#A855F7']}
+            style={styles.statCard}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
             <Text style={styles.statIcon}>⭐</Text>
             <Text style={styles.statNumber}>{completedStars}/{totalStars}</Text>
             <Text style={styles.statLabel}>Stars Found</Text>
-          </NeoCard>
+            <View style={styles.statProgress}>
+              <ProgressBar
+                progress={completedStars}
+                maxProgress={totalStars}
+                color="#FFFFFF"
+                size="small"
+              />
+            </View>
+          </LinearGradient>
 
-          <NeoCard style={[styles.statCard, { backgroundColor: colors.electricGreen }]}>
+          <LinearGradient
+            colors={[colors.electricGreen, '#059669']}
+            style={styles.statCard}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
             <Text style={styles.statIcon}>⚔️</Text>
             <Text style={styles.statNumber}>{completedQuests}/{totalQuests}</Text>
             <Text style={styles.statLabel}>Quests Done</Text>
-          </NeoCard>
+            <View style={styles.statProgress}>
+              <ProgressBar
+                progress={completedQuests}
+                maxProgress={totalQuests}
+                color="#FFFFFF"
+                size="small"
+              />
+            </View>
+          </LinearGradient>
 
-          <NeoCard style={[styles.statCard, { backgroundColor: colors.electricOrange }]}>
+          <LinearGradient
+            colors={[colors.electricOrange, '#D97706']}
+            style={styles.statCard}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
             <Text style={styles.statIcon}>🎁</Text>
             <Text style={styles.statNumber}>{user?.stats.nftsEarned || 0}</Text>
             <Text style={styles.statLabel}>NFTs Earned</Text>
-          </NeoCard>
+            <View style={styles.statProgress}>
+              <ProgressBar
+                progress={user?.stats.nftsEarned || 0}
+                maxProgress={10}
+                color="#FFFFFF"
+                size="small"
+              />
+            </View>
+          </LinearGradient>
         </View>
 
-        {/* Progress Section */}
+        {/* Enhanced Progress Section */}
         <NeoCard style={styles.progressCard}>
-          <Text style={styles.sectionTitle}>Your Progress</Text>
+          <View style={styles.progressHeader}>
+            <Text style={styles.sectionTitle}>Your Progress</Text>
+            <Text style={styles.progressPercentage}>
+              {Math.round((completedStars / Math.max(totalStars, 1)) * 100)}%
+            </Text>
+          </View>
           
           <View style={styles.progressItem}>
-            <Text style={styles.progressLabel}>Star Collection</Text>
+            <View style={styles.progressItemHeader}>
+              <Text style={styles.progressLabel}>Star Collection</Text>
+              <Text style={styles.progressValue}>{completedStars}/{totalStars}</Text>
+            </View>
             <ProgressBar
               progress={completedStars}
               maxProgress={totalStars}
@@ -99,7 +180,10 @@ export const HomeScreen: React.FC = () => {
           </View>
 
           <View style={styles.progressItem}>
-            <Text style={styles.progressLabel}>Quest Completion</Text>
+            <View style={styles.progressItemHeader}>
+              <Text style={styles.progressLabel}>Quest Completion</Text>
+              <Text style={styles.progressValue}>{completedQuests}/{totalQuests}</Text>
+            </View>
             <ProgressBar
               progress={completedQuests}
               maxProgress={totalQuests}
@@ -108,7 +192,10 @@ export const HomeScreen: React.FC = () => {
           </View>
 
           <View style={styles.progressItem}>
-            <Text style={styles.progressLabel}>Current Streak</Text>
+            <View style={styles.progressItemHeader}>
+              <Text style={styles.progressLabel}>Current Streak</Text>
+              <Text style={styles.progressValue}>{user?.stats.streak || 0}/30 days</Text>
+            </View>
             <ProgressBar
               progress={user?.stats.streak || 0}
               maxProgress={30}
@@ -117,32 +204,63 @@ export const HomeScreen: React.FC = () => {
           </View>
         </NeoCard>
 
-        {/* Quick Actions */}
+        {/* Enhanced Quick Actions */}
         <Text style={styles.sectionTitle}>Quick Actions</Text>
-        <View style={styles.actionsContainer}>
+        <View style={styles.actionsGrid}>
           {quickActions.map((action, index) => (
-            <NeoCard
+            <TouchableOpacity
               key={index}
-              style={[styles.actionCard, { backgroundColor: action.color }]}
+              style={styles.actionCard}
               onPress={action.onPress}
+              activeOpacity={0.8}
             >
-              <Text style={styles.actionIcon}>{action.icon}</Text>
-              <Text style={styles.actionTitle}>{action.title}</Text>
-              <Text style={styles.actionDescription}>{action.description}</Text>
+              <LinearGradient
+                colors={action.gradient as [string, string]}
+                style={styles.actionGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <Text style={styles.actionIcon}>{action.icon}</Text>
+                <Text style={styles.actionTitle}>{action.title}</Text>
+                <Text style={styles.actionDescription}>{action.description}</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Achievements Section */}
+        <Text style={styles.sectionTitle}>Achievements</Text>
+        <View style={styles.achievementsContainer}>
+          {achievements.map((achievement) => (
+            <NeoCard
+              key={achievement.id}
+              style={[
+                styles.achievementCard,
+                { opacity: achievement.unlocked ? 1 : 0.5 }
+              ] as any}
+            >
+              <Text style={styles.achievementIcon}>{achievement.icon}</Text>
+              <Text style={styles.achievementTitle}>{achievement.title}</Text>
+              {achievement.unlocked && (
+                <Text style={styles.achievementBadge}>✓</Text>
+              )}
             </NeoCard>
           ))}
         </View>
 
-        {/* Recent Activity */}
+        {/* Enhanced Recent Activity */}
         <Text style={styles.sectionTitle}>Recent Activity</Text>
         <NeoCard style={styles.activityCard}>
-          {recentActivity.map((activity) => (
+          {recentActivity.map((activity, index) => (
             <View key={activity.id} style={styles.activityItem}>
-              <Text style={styles.activityIcon}>{activity.icon}</Text>
+              <View style={[styles.activityIconContainer, { backgroundColor: activity.color }]}>
+                <Text style={styles.activityIcon}>{activity.icon}</Text>
+              </View>
               <View style={styles.activityContent}>
                 <Text style={styles.activityAction}>{activity.action}</Text>
                 <Text style={styles.activityTime}>{activity.time}</Text>
               </View>
+              {index < recentActivity.length - 1 && <View style={styles.activityDivider} />}
             </View>
           ))}
         </NeoCard>
@@ -154,107 +272,226 @@ export const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    backgroundColor: colors.background,
   },
-  header: {
-    marginBottom: 24,
+  heroSection: {
+    margin: 20,
+    borderRadius: 20,
+    padding: 24,
+    marginBottom: 20,
   },
-  welcomeText: {
-    ...typography.brutalLarge,
-    color: colors.foreground,
+  heroContent: {
+    alignItems: 'center',
+  },
+  heroTitle: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
     marginBottom: 8,
+    textAlign: 'center',
   },
-  subtitle: {
-    ...typography.body,
-    color: colors.mutedForeground,
+  heroSubtitle: {
+    fontSize: 18,
+    color: '#FFFFFF',
+    marginBottom: 4,
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+  heroDescription: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    opacity: 0.9,
+  },
+  walletAddress: {
+    fontSize: 12,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    opacity: 0.8,
+    marginTop: 8,
+    fontFamily: 'monospace',
   },
   statsContainer: {
     flexDirection: 'row',
     gap: 12,
+    marginHorizontal: 20,
     marginBottom: 24,
   },
   statCard: {
     flex: 1,
     alignItems: 'center',
     padding: 16,
+    borderRadius: 16,
+    minHeight: 120,
   },
   statIcon: {
-    fontSize: 24,
+    fontSize: 28,
     marginBottom: 8,
   },
   statNumber: {
-    ...typography.brutalMedium,
-    color: colors.primaryForeground,
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
     marginBottom: 4,
   },
   statLabel: {
-    ...typography.caption,
-    color: colors.primaryForeground,
+    fontSize: 12,
+    color: '#FFFFFF',
     textAlign: 'center',
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  statProgress: {
+    width: '100%',
   },
   progressCard: {
+    marginHorizontal: 20,
     marginBottom: 24,
+    padding: 20,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
   },
   sectionTitle: {
-    ...typography.brutalSmall,
+    fontSize: 20,
+    fontWeight: 'bold',
     color: colors.foreground,
     marginBottom: 16,
+    marginHorizontal: 20,
+  },
+  progressPercentage: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: colors.electricPurple,
   },
   progressItem: {
     marginBottom: 16,
   },
-  progressLabel: {
-    ...typography.body,
-    color: colors.foreground,
+  progressItemHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 8,
+  },
+  progressLabel: {
+    fontSize: 14,
+    color: colors.foreground,
     fontWeight: '600',
   },
-  actionsContainer: {
-    gap: 12,
+  progressValue: {
+    fontSize: 12,
+    color: colors.mutedForeground,
+    fontWeight: '600',
+  },
+  actionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: 20,
     marginBottom: 24,
+    gap: 12,
   },
   actionCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    width: (width - 64) / 2,
+    height: 120,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  actionGradient: {
+    flex: 1,
     padding: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   actionIcon: {
-    fontSize: 24,
-    marginRight: 16,
+    fontSize: 32,
+    marginBottom: 8,
   },
   actionTitle: {
-    ...typography.brutalSmall,
-    color: colors.primaryForeground,
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
     marginBottom: 4,
+    textAlign: 'center',
   },
   actionDescription: {
-    ...typography.bodySmall,
-    color: colors.primaryForeground,
+    fontSize: 12,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    opacity: 0.9,
+  },
+  achievementsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: 20,
+    marginBottom: 24,
+    gap: 12,
+  },
+  achievementCard: {
+    width: (width - 64) / 2,
+    padding: 16,
+    alignItems: 'center',
+    position: 'relative',
+  },
+  achievementIcon: {
+    fontSize: 24,
+    marginBottom: 8,
+  },
+  achievementTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.foreground,
+    textAlign: 'center',
+  },
+  achievementBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    fontSize: 16,
+    color: colors.electricGreen,
+    fontWeight: 'bold',
   },
   activityCard: {
+    marginHorizontal: 20,
     marginBottom: 24,
+    padding: 20,
   },
   activityItem: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.muted,
+  },
+  activityIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
   },
   activityIcon: {
     fontSize: 20,
-    marginRight: 16,
+    color: '#FFFFFF',
   },
   activityContent: {
     flex: 1,
   },
   activityAction: {
-    ...typography.body,
+    fontSize: 14,
     color: colors.foreground,
     marginBottom: 4,
+    fontWeight: '600',
   },
   activityTime: {
-    ...typography.caption,
+    fontSize: 12,
     color: colors.mutedForeground,
+  },
+  activityDivider: {
+    height: 1,
+    backgroundColor: colors.muted,
+    marginLeft: 56,
+    marginVertical: 8,
   },
 });

@@ -1,16 +1,18 @@
 import React from 'react';
 import { TouchableOpacity, Text, ViewStyle, TextStyle } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '../../utils/colors';
 import { typography } from '../../utils/typography';
 
 interface NeoButtonProps {
   title: string;
   onPress: () => void;
-  variant?: 'default' | 'electric' | 'outline' | 'ghost';
+  variant?: 'default' | 'electric' | 'outline' | 'ghost' | 'gradient';
   size?: 'small' | 'medium' | 'large';
   disabled?: boolean;
   style?: ViewStyle;
   textStyle?: TextStyle;
+  gradient?: string[];
   [key: string]: any;
 }
 
@@ -22,40 +24,58 @@ export const NeoButton: React.FC<NeoButtonProps> = ({
   disabled = false,
   style,
   textStyle,
+  gradient,
   ...props
 }) => {
   const getButtonStyle = (): ViewStyle => {
     const baseStyle: ViewStyle = {
-      borderRadius: 8,
-      borderWidth: 3,
-      borderColor: colors.foreground,
-      alignItems: 'center' as const,
-      justifyContent: 'center' as const,
+      borderRadius: 12,
+      borderWidth: 2,
+      borderColor: colors.border,
+      alignItems: 'center',
+      justifyContent: 'center',
       opacity: disabled ? 0.5 : 1,
+      shadowColor: colors.foreground,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
+      elevation: 4,
     };
 
     // Size styles
     const sizeStyles: Record<string, ViewStyle> = {
-      small: { paddingHorizontal: 16, paddingVertical: 8 },
-      medium: { paddingHorizontal: 24, paddingVertical: 12 },
-      large: { paddingHorizontal: 32, paddingVertical: 16 },
+      small: { paddingHorizontal: 16, paddingVertical: 8, minHeight: 36 },
+      medium: { paddingHorizontal: 24, paddingVertical: 12, minHeight: 48 },
+      large: { paddingHorizontal: 32, paddingVertical: 16, minHeight: 56 },
     };
 
     // Variant styles
     const variantStyles: Record<string, ViewStyle> = {
       default: {
         backgroundColor: colors.primary,
+        borderColor: colors.primary,
       },
       electric: {
         backgroundColor: colors.electricPurple,
+        borderColor: colors.electricPurple,
       },
       outline: {
         backgroundColor: 'transparent',
         borderColor: colors.foreground,
+        shadowOpacity: 0,
+        elevation: 0,
       },
       ghost: {
         backgroundColor: 'transparent',
         borderWidth: 0,
+        shadowOpacity: 0,
+        elevation: 0,
+      },
+      gradient: {
+        backgroundColor: 'transparent',
+        borderWidth: 0,
+        shadowOpacity: 0,
+        elevation: 0,
       },
     };
 
@@ -69,8 +89,8 @@ export const NeoButton: React.FC<NeoButtonProps> = ({
 
   const getTextStyle = (): TextStyle => {
     const baseTextStyle: TextStyle = {
-      ...typography.body,
-      fontWeight: '700' as const,
+      ...typography.button,
+      fontWeight: '700',
     };
 
     const variantTextStyles: Record<string, TextStyle> = {
@@ -78,6 +98,7 @@ export const NeoButton: React.FC<NeoButtonProps> = ({
       electric: { color: colors.primaryForeground },
       outline: { color: colors.foreground },
       ghost: { color: colors.foreground },
+      gradient: { color: colors.primaryForeground },
     };
 
     return {
@@ -87,15 +108,32 @@ export const NeoButton: React.FC<NeoButtonProps> = ({
     };
   };
 
-  return (
-    <TouchableOpacity
-      style={getButtonStyle()}
-      onPress={onPress}
-      disabled={disabled}
-      activeOpacity={0.7}
-      {...props}
-    >
-      <Text style={getTextStyle()}>{title}</Text>
-    </TouchableOpacity>
-  );
+  const ButtonContent = () => {
+    if (variant === 'gradient' && gradient) {
+      return (
+        <LinearGradient
+          colors={gradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={getButtonStyle()}
+        >
+          <Text style={getTextStyle()}>{title}</Text>
+        </LinearGradient>
+      );
+    }
+
+    return (
+      <TouchableOpacity
+        style={getButtonStyle()}
+        onPress={onPress}
+        disabled={disabled}
+        activeOpacity={0.8}
+        {...props}
+      >
+        <Text style={getTextStyle()}>{title}</Text>
+      </TouchableOpacity>
+    );
+  };
+
+  return <ButtonContent />;
 };

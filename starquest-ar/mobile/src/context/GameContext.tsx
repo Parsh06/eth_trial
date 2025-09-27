@@ -140,6 +140,8 @@ const mockLeaderboard: LeaderboardEntry[] = [
 ];
 
 type GameAction = 
+  | { type: 'PRELOADER_COMPLETE' }
+  | { type: 'LANDING_COMPLETE' }
   | { type: 'ONBOARDING_COMPLETE' }
   | { type: 'WALLET_CONNECT'; address: string }
   | { type: 'TAB_CHANGE'; tab: string }
@@ -148,22 +150,35 @@ type GameAction =
   | { type: 'DISCONNECT_WALLET' }
   | { type: 'QR_SCAN'; data: string };
 
-const initialState: AppState = { screen: "onboarding" };
+const initialState: AppState = { screen: "preloader" };
 
 function gameReducer(state: AppState, action: GameAction): AppState {
   switch (action.type) {
+    case 'PRELOADER_COMPLETE':
+      return { screen: "landing" };
+    case 'LANDING_COMPLETE':
+      return { screen: "login" };
     case 'ONBOARDING_COMPLETE':
       return { screen: "wallet-connect" };
     case 'WALLET_CONNECT':
       return { screen: "main", activeTab: "home", walletAddress: action.address };
     case 'TAB_CHANGE':
-      return { ...state, activeTab: action.tab };
+      if (state.screen === "main") {
+        return { ...state, activeTab: action.tab };
+      }
+      return state;
     case 'CHALLENGE_SELECT':
-      return { ...state, screen: "challenge", challengeId: action.id };
+      if (state.screen === "main") {
+        return { ...state, screen: "challenge", challengeId: action.id };
+      }
+      return state;
     case 'CHALLENGE_COMPLETE':
-      return { ...state, screen: "reward" };
+      if (state.screen === "challenge") {
+        return { ...state, screen: "reward" };
+      }
+      return state;
     case 'DISCONNECT_WALLET':
-      return { screen: "onboarding" };
+      return { screen: "preloader" };
     case 'QR_SCAN':
       // Handle QR scan logic
       return state;
@@ -221,6 +236,14 @@ export function GameProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const handlePreloaderComplete = () => {
+    dispatch({ type: 'PRELOADER_COMPLETE' });
+  };
+
+  const handleLandingComplete = () => {
+    dispatch({ type: 'LANDING_COMPLETE' });
+  };
+
   const handleOnboardingComplete = () => {
     dispatch({ type: 'ONBOARDING_COMPLETE' });
   };
@@ -228,23 +251,31 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const handleWalletConnect = async (address: string) => {
     try {
       setLoading(true);
-      // In a real implementation, you would get signature from wallet
-      const signature = 'mock-signature';
-      const message = 'Connect to StarQuest AR';
+      setError(null);
       
-      const response = await apiService.walletLogin(address, signature, message);
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
-      if (response.success) {
-        setUser(response.user);
-        dispatch({ type: 'WALLET_CONNECT', address });
-        // Connect to WebSocket
-        websocketService.connect(response.token);
-      } else {
-        setError('Failed to connect wallet');
-      }
+      // Create dummy user data
+      const dummyUser = {
+        id: 'user-' + Date.now(),
+        walletAddress: address,
+        username: 'StarHunter' + Math.floor(Math.random() * 1000),
+        stats: {
+          starsFound: Math.floor(Math.random() * 10),
+          questsCompleted: Math.floor(Math.random() * 5),
+          nftsEarned: Math.floor(Math.random() * 3),
+          streak: Math.floor(Math.random() * 7)
+        },
+        achievements: ['First Star', 'Quick Learner', 'Streak Master']
+      };
+      
+      setUser(dummyUser);
+      dispatch({ type: 'WALLET_CONNECT', address });
+      
     } catch (error) {
       console.error('Wallet connect error:', error);
-      setError('Failed to connect wallet');
+      setError('Failed to connect wallet. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -279,6 +310,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
     leaderboard,
     loading,
     error,
+    handlePreloaderComplete,
+    handleLandingComplete,
     handleOnboardingComplete,
     handleWalletConnect,
     handleTabChange,

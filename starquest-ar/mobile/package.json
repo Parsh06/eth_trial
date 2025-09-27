@@ -1,19 +1,18 @@
 {
   "name": "starquestar",
   "version": "1.0.0",
-  "main": "App.tsx",
+  "main": "index.ts",
   "scripts": {
-    "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web"
+    "start": "expo start --clear",
+    "android": "expo start --android --clear",
+    "ios": "expo start --ios --clear",
+    "web": "expo start --web --clear",
+    "build": "expo build",
+    "eject": "expo eject"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
     "@react-native-async-storage/async-storage": "2.2.0",
-    "@react-navigation/bottom-tabs": "^6.5.20",
-    "@react-navigation/native": "^6.1.18",
-    "@react-navigation/stack": "^6.3.29",
     "axios": "^1.7.9",
     "expo": "~54.0.0",
     "expo-av": "^16.0.7",
@@ -27,7 +26,6 @@
     "expo-linear-gradient": "^15.0.7",
     "expo-linking": "~8.0.8",
     "expo-location": "~19.0.7",
-    "expo-router": "~6.0.8",
     "expo-secure-store": "~15.0.7",
     "expo-sensors": "~15.0.2",
     "expo-splash-screen": "~31.0.10",
@@ -43,7 +41,7 @@
     "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
-    "@types/react": "~19.1.10",
+    "@types/react": "19.1.0",
     "typescript": "~5.9.2"
   },
   "private": true

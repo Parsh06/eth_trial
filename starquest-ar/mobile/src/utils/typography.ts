@@ -1,61 +1,85 @@
-// Typography definitions for React Native
+// Enhanced Typography definitions for React Native
 
 export const typography = {
-  // Brutal Large - 40px, font-weight: 900
+  // Brutal Typography (Bold, Impactful)
   brutalLarge: {
-    fontSize: 40,
+    fontSize: 36,
     fontWeight: '900' as const,
-    lineHeight: 44,
+    letterSpacing: -1,
+    lineHeight: 40,
   },
-  
-  // Brutal Medium - 30px, font-weight: 800
   brutalMedium: {
-    fontSize: 30,
+    fontSize: 28,
     fontWeight: '800' as const,
-    lineHeight: 36,
+    letterSpacing: -0.5,
+    lineHeight: 32,
   },
-  
-  // Brutal Small - 20px, font-weight: 700
   brutalSmall: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '700' as const,
+    letterSpacing: -0.3,
     lineHeight: 26,
   },
   
-  // Standard Typography
+  // Enhanced Typography
   heading1: {
     fontSize: 32,
     fontWeight: '700' as const,
     lineHeight: 40,
+    letterSpacing: -0.5,
   },
-  
   heading2: {
     fontSize: 24,
     fontWeight: '600' as const,
     lineHeight: 32,
+    letterSpacing: -0.3,
   },
-  
   heading3: {
     fontSize: 20,
     fontWeight: '600' as const,
     lineHeight: 28,
+    letterSpacing: -0.2,
   },
-  
+  subheading: {
+    fontSize: 18,
+    fontWeight: '600' as const,
+    lineHeight: 24,
+    letterSpacing: -0.1,
+  },
   body: {
     fontSize: 16,
     fontWeight: '400' as const,
     lineHeight: 24,
+    letterSpacing: 0,
   },
-  
   bodySmall: {
     fontSize: 14,
     fontWeight: '400' as const,
     lineHeight: 20,
+    letterSpacing: 0.1,
   },
-  
   caption: {
     fontSize: 12,
-    fontWeight: '400' as const,
+    fontWeight: '500' as const,
     lineHeight: 16,
+    letterSpacing: 0.2,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    lineHeight: 18,
+    letterSpacing: 0.1,
+  },
+  button: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    lineHeight: 20,
+    letterSpacing: 0.1,
+  },
+  // Legacy support
+  heading: {
+    fontSize: 20,
+    fontWeight: '600' as const,
+    lineHeight: 28,
   },
 } as const;

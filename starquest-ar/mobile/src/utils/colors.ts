@@ -3,17 +3,20 @@ export const colors = {
   primary: '#8B5CF6', // Electric Purple
   primaryForeground: '#FFFFFF',
   
-  // Electric Variants
+  // Electric Variants with enhanced gradients
   electricPurple: '#8B5CF6',
   electricGreen: '#10B981',
   electricOrange: '#F59E0B',
   electricPink: '#EC4899',
+  electricBlue: '#3B82F6',
+  electricCyan: '#06B6D4',
   
-  // Neutral Colors
-  background: '#FFFFFF',
+  // Neutral Colors with better contrast
+  background: '#FAFAFA',
   foreground: '#0F172A',
-  muted: '#F1F5F9',
+  muted: '#F8FAFC',
   mutedForeground: '#64748B',
+  border: '#E2E8F0',
   
   // Status Colors
   success: '#10B981',
@@ -31,6 +34,18 @@ export const colors = {
   rare: '#3B82F6',
   epic: '#8B5CF6',
   legendary: '#F59E0B',
+  
+  // Enhanced theme colors
+  card: '#FFFFFF',
+  cardForeground: '#0F172A',
+  popover: '#FFFFFF',
+  popoverForeground: '#0F172A',
+  secondary: '#F1F5F9',
+  secondaryForeground: '#0F172A',
+  accent: '#F1F5F9',
+  accentForeground: '#0F172A',
+  destructive: '#EF4444',
+  destructiveForeground: '#FFFFFF',
 } as const;
 
 export const gradients = {

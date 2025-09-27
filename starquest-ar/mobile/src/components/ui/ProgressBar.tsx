@@ -1,11 +1,13 @@
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '../../utils/colors';
 import { typography } from '../../utils/typography';
 
 interface ProgressBarProps {
-  progress: number; // 0-100
-  max?: number;
+  progress: number;
+  maxProgress: number;
+  color?: string;
   showPercentage?: boolean;
   label?: string;
   variant?: 'default' | 'success' | 'warning' | 'error';
@@ -16,7 +18,8 @@ interface ProgressBarProps {
 
 export const ProgressBar: React.FC<ProgressBarProps> = ({
   progress,
-  max = 100,
+  maxProgress,
+  color,
   showPercentage = true,
   label,
   variant = 'default',
@@ -24,29 +27,33 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   style,
   textStyle,
 }) => {
-  const percentage = Math.min(Math.max((progress / max) * 100, 0), 100);
+  const percentage = Math.min(Math.max((progress / maxProgress) * 100, 0), 100);
 
   const getVariantColors = () => {
+    if (color) {
+      return { bg: color, text: '#FFFFFF' };
+    }
+    
     switch (variant) {
       case 'success':
-        return { bg: colors.success, text: colors.primaryForeground };
+        return { bg: colors.success, text: '#FFFFFF' };
       case 'warning':
-        return { bg: colors.warning, text: colors.primaryForeground };
+        return { bg: colors.warning, text: '#FFFFFF' };
       case 'error':
-        return { bg: colors.error, text: colors.primaryForeground };
+        return { bg: colors.error, text: '#FFFFFF' };
       default:
-        return { bg: colors.primary, text: colors.primaryForeground };
+        return { bg: colors.primary, text: '#FFFFFF' };
     }
   };
 
   const getSizeStyles = () => {
     switch (size) {
       case 'small':
-        return { height: 8, fontSize: 12 };
+        return { height: 6, fontSize: 10, borderRadius: 3 };
       case 'large':
-        return { height: 16, fontSize: 16 };
+        return { height: 16, fontSize: 16, borderRadius: 8 };
       default:
-        return { height: 12, fontSize: 14 };
+        return { height: 12, fontSize: 14, borderRadius: 6 };
     }
   };
 
@@ -65,16 +72,20 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
             {
               height: sizeStyles.height,
               backgroundColor: colors.muted,
+              borderRadius: sizeStyles.borderRadius,
             },
           ]}
         >
-          <View
+          <LinearGradient
+            colors={[colors_variant.bg, colors_variant.bg + 'CC']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
             style={[
               styles.progressFill,
               {
                 width: `${percentage}%`,
-                backgroundColor: colors_variant.bg,
                 height: sizeStyles.height,
+                borderRadius: sizeStyles.borderRadius,
               },
             ]}
           />
@@ -102,32 +113,34 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   label: {
-    ...typography.bodySmall,
+    ...typography.label,
     color: colors.foreground,
     marginBottom: 8,
-    fontWeight: '600' as const,
   },
   progressContainer: {
     flexDirection: 'row',
-    alignItems: 'center' as const,
-    justifyContent: 'space-between' as const,
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   progressBar: {
     flex: 1,
-    borderRadius: 6,
-    borderWidth: 2,
-    borderColor: colors.foreground,
+    borderWidth: 1,
+    borderColor: colors.border,
     overflow: 'hidden',
     marginRight: 8,
+    shadowColor: colors.foreground,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   progressFill: {
-    borderRadius: 4,
-    transition: 'width 0.3s ease',
+    borderRadius: 6,
   },
   percentage: {
-    ...typography.bodySmall,
-    fontWeight: '700' as const,
+    ...typography.label,
+    fontWeight: '700',
     minWidth: 40,
-    textAlign: 'center' as const,
+    textAlign: 'center',
   },
 });

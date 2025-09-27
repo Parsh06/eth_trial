@@ -65,6 +65,9 @@ export interface LeaderboardEntry {
 }
 
 export type AppState = 
+  | { screen: "preloader" }
+  | { screen: "landing" }
+  | { screen: "login" }
   | { screen: "onboarding" }
   | { screen: "wallet-connect" }
   | { screen: "main"; activeTab: string; walletAddress?: string }
@@ -80,6 +83,8 @@ export interface GameContextType {
   leaderboard: LeaderboardEntry[];
   loading: boolean;
   error: string | null;
+  handlePreloaderComplete: () => void;
+  handleLandingComplete: () => void;
   handleOnboardingComplete: () => void;
   handleWalletConnect: (address: string) => void;
   handleTabChange: (tab: string) => void;
