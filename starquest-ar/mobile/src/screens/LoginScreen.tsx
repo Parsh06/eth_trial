@@ -8,6 +8,7 @@ import {
   Dimensions,
   Animated,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useGame } from '../context/GameContext';
@@ -74,11 +75,11 @@ export const LoginScreen: React.FC = () => {
       const message = `Welcome to StarQuest AR!\n\nPlease sign this message to authenticate your wallet.\n\nTimestamp: ${Date.now()}`;
       const signature = await metaMaskService.signMessage(message);
       
-      // Connect to the app
-      await handleWalletConnect(walletInfo.address);
+      // Connect to the app with signature and message
+      await handleWalletConnect(walletInfo.address, signature, message);
       
       // Navigation will happen automatically via GameContext
-      console.log('Wallet connected, navigation should happen automatically');
+      console.log('Wallet connected with signature, navigation should happen automatically');
       
     } catch (error) {
       console.error('MetaMask connection error:', error);

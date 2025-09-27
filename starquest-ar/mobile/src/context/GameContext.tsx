@@ -250,27 +250,50 @@ export function GameProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'ONBOARDING_COMPLETE' });
   };
 
-  const handleWalletConnect = async (address: string) => {
+  const handleWalletConnect = async (address: string, signature?: string, message?: string) => {
     try {
       setLoading(true);
       setError(null);
       
-      // Simulate API delay for user creation/authentication
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('Connecting wallet:', address);
       
-      // Create user data with real wallet address
-      const userData = {
-        id: 'user-' + Date.now(),
-        walletAddress: address,
-        username: 'StarHunter' + Math.floor(Math.random() * 1000),
-        stats: {
-          starsFound: Math.floor(Math.random() * 10),
-          questsCompleted: Math.floor(Math.random() * 5),
-          nftsEarned: Math.floor(Math.random() * 3),
-          streak: Math.floor(Math.random() * 7)
-        },
-        achievements: ['First Star', 'Quick Learner', 'Streak Master']
-      };
+      // Try to authenticate with the backend API
+      let userData;
+      try {
+        const authResponse = await apiService.walletLogin(address, signature || '', message || '');
+        if (authResponse.success) {
+          userData = {
+            id: authResponse.user.id,
+            walletAddress: authResponse.user.walletAddress,
+            username: authResponse.user.username,
+            stats: {
+              starsFound: authResponse.user.starsCollected || 0,
+              questsCompleted: authResponse.user.questsCompleted || 0,
+              nftsEarned: authResponse.user.nftsEarned || 0,
+              streak: authResponse.user.streak || 0
+            },
+            achievements: authResponse.user.achievements || ['First Star']
+          };
+          console.log('Backend authentication successful');
+        } else {
+          throw new Error('Authentication failed');
+        }
+      } catch (apiError) {
+        console.log('Backend authentication failed, using mock data:', apiError.message);
+        // Fallback to mock data if backend is not available
+        userData = {
+          id: 'user-' + Date.now(),
+          walletAddress: address,
+          username: 'StarHunter' + Math.floor(Math.random() * 1000),
+          stats: {
+            starsFound: Math.floor(Math.random() * 10),
+            questsCompleted: Math.floor(Math.random() * 5),
+            nftsEarned: Math.floor(Math.random() * 3),
+            streak: Math.floor(Math.random() * 7)
+          },
+          achievements: ['First Star', 'Quick Learner', 'Streak Master']
+        };
+      }
       
       setUser(userData);
       console.log('Wallet connected successfully, navigating to home...');

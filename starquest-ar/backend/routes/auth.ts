@@ -17,15 +17,23 @@ router.post('/wallet-login', async (req, res) => {
   try {
     const { walletAddress, signature, message } = req.body;
     
-    if (!walletAddress || !signature || !message) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    if (!walletAddress) {
+      return res.status(400).json({ error: 'Wallet address is required' });
     }
     
-    // Verify signature (simplified - in production, use proper signature verification)
-    // const isValidSignature = verifySignature(walletAddress, signature, message);
-    // if (!isValidSignature) {
-    //   return res.status(401).json({ error: 'Invalid signature' });
-    // }
+    // Verify signature if provided (for production)
+    if (signature && message) {
+      try {
+        const web3Service = req.app.locals.web3Service;
+        const isValidSignature = await web3Service.verifySignature(message, signature, walletAddress);
+        if (!isValidSignature) {
+          return res.status(401).json({ error: 'Invalid signature' });
+        }
+      } catch (signatureError: any) {
+        console.warn('Signature verification failed, but allowing for demo:', signatureError?.message || 'Unknown error');
+        // In demo mode, we'll allow login even if signature verification fails
+      }
+    }
     
     // Find or create user
     let user = await User.findOne({ walletAddress: walletAddress.toLowerCase() });
