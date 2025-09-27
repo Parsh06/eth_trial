@@ -35,10 +35,7 @@ export const NeoButton: React.FC<NeoButtonProps> = ({
       alignItems: 'center',
       justifyContent: 'center',
       opacity: disabled ? 0.5 : 1,
-      shadowColor: '#000000',
-      shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: 0.3,
-      shadowRadius: 12,
+      boxShadow: '0px 6px 12px rgba(0, 0, 0, 0.3)',
       elevation: 8,
       minHeight: 48,
     };
@@ -63,19 +60,19 @@ export const NeoButton: React.FC<NeoButtonProps> = ({
       outline: {
         backgroundColor: 'transparent',
         borderColor: colors.foreground,
-        shadowOpacity: 0,
+        boxShadow: 'none',
         elevation: 0,
       },
       ghost: {
         backgroundColor: 'transparent',
         borderWidth: 0,
-        shadowOpacity: 0,
+        boxShadow: 'none',
         elevation: 0,
       },
       gradient: {
         backgroundColor: 'transparent',
         borderWidth: 0,
-        shadowOpacity: 0,
+        boxShadow: 'none',
         elevation: 0,
       },
     };

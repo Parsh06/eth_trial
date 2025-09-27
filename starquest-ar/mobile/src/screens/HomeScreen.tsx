@@ -258,10 +258,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     padding: 28,
     marginBottom: 24,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
+    boxShadow: '0px 8px 16px rgba(0, 0, 0, 0.3)',
     elevation: 12,
   },
   heroContent: {
@@ -341,10 +338,7 @@ const styles = StyleSheet.create({
     width: (width - 72) / 2,
     borderRadius: 20,
     overflow: 'hidden',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
+    boxShadow: '0px 8px 16px rgba(0, 0, 0, 0.3)',
     elevation: 12,
   },
   actionGradient: {

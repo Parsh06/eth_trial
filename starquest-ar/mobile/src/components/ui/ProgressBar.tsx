@@ -122,10 +122,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     overflow: 'hidden',
     marginRight: 8,
-    shadowColor: colors.foreground,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    boxShadow: '0px 2px 4px ' + colors.foreground + '1A',
     elevation: 2,
   },
   progressFill: {

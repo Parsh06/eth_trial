@@ -28,10 +28,7 @@ export const NeoCard: React.FC<NeoCardProps> = ({
       backgroundColor: colors.card,
       padding: 24,
       marginVertical: 12,
-      shadowColor: '#000000',
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.25,
-      shadowRadius: 16,
+      boxShadow: '0px 8px 16px rgba(0, 0, 0, 0.25)',
       elevation: 12,
       minHeight: 80,
     };
@@ -43,23 +40,20 @@ export const NeoCard: React.FC<NeoCardProps> = ({
       },
       elevated: {
         backgroundColor: colors.card,
-        shadowColor: colors.foreground,
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.15,
-        shadowRadius: 12,
+        boxShadow: '0px 8px 12px ' + colors.foreground + '26',
         elevation: 8,
       },
       outlined: {
         backgroundColor: 'transparent',
         borderWidth: 2,
         borderColor: colors.border,
-        shadowOpacity: 0,
+        boxShadow: 'none',
         elevation: 0,
       },
       gradient: {
         backgroundColor: 'transparent',
         borderWidth: 0,
-        shadowOpacity: 0,
+        boxShadow: 'none',
         elevation: 0,
       },
     };
