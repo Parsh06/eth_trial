@@ -4,6 +4,8 @@ import {
   Text,
   StyleSheet,
   Alert,
+  TextInput,
+  ScrollView,
 } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { MobileLayout } from '../components/layout/MobileLayout';
@@ -11,10 +13,14 @@ import { NeoButton } from '../components/ui/NeoButton';
 import { NeoCard } from '../components/ui/NeoCard';
 import { colors } from '../utils/colors';
 import { typography } from '../utils/typography';
+import { starQuestService } from '../services/StarQuestService';
 
 export const WalletConnectScreen: React.FC = () => {
   const [isConnecting, setIsConnecting] = useState(false);
-  const { handleWalletConnect } = useGame();
+  const [isConnectingHedera, setIsConnectingHedera] = useState(false);
+  const [hederaPrivateKey, setHederaPrivateKey] = useState('');
+  const [showHederaForm, setShowHederaForm] = useState(false);
+  const { handleWalletConnect, connectHederaWallet } = useGame();
 
   const handleConnectWallet = async () => {
     setIsConnecting(true);
@@ -25,6 +31,37 @@ export const WalletConnectScreen: React.FC = () => {
       handleWalletConnect(mockAddress);
       setIsConnecting(false);
     }, 2000);
+  };
+
+  const handleConnectHedera = async () => {
+    if (!hederaPrivateKey.trim()) {
+      Alert.alert('Error', 'Please enter your Hedera private key');
+      return;
+    }
+
+    setIsConnectingHedera(true);
+    
+    try {
+      const success = await connectHederaWallet(hederaPrivateKey.trim());
+      
+      if (success) {
+        const address = await starQuestService.getWalletAddress();
+        if (address) {
+          Alert.alert(
+            'Success!',
+            `Connected to Hedera wallet: ${address.slice(0, 10)}...${address.slice(-8)}`,
+            [{ text: 'OK' }]
+          );
+        }
+      } else {
+        Alert.alert('Error', 'Failed to connect to Hedera wallet. Please check your private key.');
+      }
+    } catch (error) {
+      console.error('Hedera connection error:', error);
+      Alert.alert('Error', 'Failed to connect to Hedera wallet. Please try again.');
+    } finally {
+      setIsConnectingHedera(false);
+    }
   };
 
   const handleGuestMode = () => {
@@ -41,9 +78,27 @@ export const WalletConnectScreen: React.FC = () => {
     );
   };
 
+  const handleDemoHedera = () => {
+    Alert.alert(
+      'Demo Mode',
+      'This will connect to Hedera testnet with demo data. You can interact with the StarQuest contracts but no real HBAR will be used.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Connect Demo', 
+          onPress: () => {
+            // Use a demo private key for testing
+            setHederaPrivateKey('0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef');
+            setShowHederaForm(true);
+          }
+        },
+      ]
+    );
+  };
+
   return (
     <MobileLayout>
-      <View style={styles.container}>
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <Text style={styles.title}>Connect Your Wallet</Text>
           <Text style={styles.subtitle}>
@@ -52,49 +107,102 @@ export const WalletConnectScreen: React.FC = () => {
         </View>
 
         <View style={styles.content}>
-          {/* QR Code Placeholder */}
-          <NeoCard style={styles.qrCard}>
-            <View style={styles.qrPlaceholder}>
-              <Text style={styles.qrIcon}>📱</Text>
-              <Text style={styles.qrText}>QR Code Scanner</Text>
-              <Text style={styles.qrDescription}>
-                Scan with your wallet app to connect
-              </Text>
+          {/* Hedera Wallet Section */}
+          <NeoCard style={styles.hederaCard}>
+            <Text style={styles.hederaTitle}>🌟 StarQuest on Hedera</Text>
+            <Text style={styles.hederaDescription}>
+              Connect to Hedera testnet to interact with StarQuest smart contracts
+            </Text>
+            
+            {!showHederaForm ? (
+              <View style={styles.hederaButtons}>
+                <NeoButton
+                  title="Connect Hedera Wallet"
+                  onPress={() => setShowHederaForm(true)}
+                  variant="electric"
+                  size="md"
+                  style={styles.hederaButton}
+                />
+                <NeoButton
+                  title="Demo Mode"
+                  onPress={handleDemoHedera}
+                  variant="outline"
+                  size="md"
+                  style={styles.hederaButton}
+                />
+              </View>
+            ) : (
+              <View style={styles.hederaForm}>
+                <Text style={styles.formLabel}>Hedera Private Key:</Text>
+                <TextInput
+                  style={styles.privateKeyInput}
+                  value={hederaPrivateKey}
+                  onChangeText={setHederaPrivateKey}
+                  placeholder="0x..."
+                  placeholderTextColor={colors.mutedForeground}
+                  secureTextEntry={true}
+                  multiline={true}
+                />
+                <View style={styles.formButtons}>
+                  <NeoButton
+                    title="Connect"
+                    onPress={handleConnectHedera}
+                    variant="electric"
+                    size="md"
+                    loading={isConnectingHedera}
+                    style={styles.formButton}
+                  />
+                  <NeoButton
+                    title="Cancel"
+                    onPress={() => setShowHederaForm(false)}
+                    variant="outline"
+                    size="md"
+                    style={styles.formButton}
+                  />
+                </View>
+              </View>
+            )}
+          </NeoCard>
+
+          {/* Traditional Wallet Section */}
+          <NeoCard style={styles.traditionalCard}>
+            <Text style={styles.traditionalTitle}>Traditional Wallets</Text>
+            <Text style={styles.traditionalDescription}>
+              Connect with standard Web3 wallets
+            </Text>
+            
+            <View style={styles.optionsContainer}>
+              <NeoButton
+                title="Connect Wallet"
+                onPress={handleConnectWallet}
+                variant="electric"
+                size="lg"
+                loading={isConnecting}
+                style={styles.connectButton}
+              />
+
+              <NeoButton
+                title="Continue as Guest"
+                onPress={handleGuestMode}
+                variant="outline"
+                size="lg"
+                style={styles.guestButton}
+              />
             </View>
           </NeoCard>
 
-          {/* Wallet Options */}
-          <View style={styles.optionsContainer}>
-            <NeoButton
-              title="Connect Wallet"
-              onPress={handleConnectWallet}
-              variant="electric"
-              size="lg"
-              loading={isConnecting}
-              style={styles.connectButton}
-            />
-
-            <NeoButton
-              title="Continue as Guest"
-              onPress={handleGuestMode}
-              variant="outline"
-              size="lg"
-              style={styles.guestButton}
-            />
-          </View>
-
-          {/* Supported Wallets */}
-          <NeoCard style={styles.supportedCard}>
-            <Text style={styles.supportedTitle}>Supported Wallets</Text>
-            <View style={styles.walletList}>
-              <Text style={styles.walletItem}>• MetaMask</Text>
-              <Text style={styles.walletItem}>• WalletConnect</Text>
-              <Text style={styles.walletItem}>• Coinbase Wallet</Text>
-              <Text style={styles.walletItem}>• Trust Wallet</Text>
+          {/* Network Info */}
+          <NeoCard style={styles.networkCard}>
+            <Text style={styles.networkTitle}>Network Information</Text>
+            <View style={styles.networkInfo}>
+              <Text style={styles.networkItem}>• Network: Hedera Testnet</Text>
+              <Text style={styles.networkItem}>• Chain ID: 296</Text>
+              <Text style={styles.networkItem}>• RPC: testnet.hashio.io</Text>
+              <Text style={styles.networkItem}>• Explorer: hashscan.io/testnet</Text>
             </View>
           </NeoCard>
         </View>
-      </View>
+      </ScrollView>
     </MobileLayout>
   );
 };
@@ -124,27 +232,70 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 24,
   },
-  qrCard: {
-    alignItems: 'center',
-    padding: 40,
-    backgroundColor: colors.muted,
+  // Hedera Wallet Styles
+  hederaCard: {
+    backgroundColor: colors.electricPurple + '20',
+    borderColor: colors.electricPurple,
+    borderWidth: 2,
   },
-  qrPlaceholder: {
-    alignItems: 'center',
-  },
-  qrIcon: {
-    fontSize: 60,
-    marginBottom: 16,
-  },
-  qrText: {
+  hederaTitle: {
     ...typography.brutalMedium,
-    color: colors.foreground,
+    color: colors.electricPurple,
+    textAlign: 'center',
     marginBottom: 8,
   },
-  qrDescription: {
+  hederaDescription: {
     ...typography.body,
     color: colors.mutedForeground,
     textAlign: 'center',
+    marginBottom: 20,
+  },
+  hederaButtons: {
+    gap: 12,
+  },
+  hederaButton: {
+    marginBottom: 8,
+  },
+  hederaForm: {
+    gap: 16,
+  },
+  formLabel: {
+    ...typography.brutalSmall,
+    color: colors.foreground,
+  },
+  privateKeyInput: {
+    ...typography.body,
+    backgroundColor: colors.muted,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    color: colors.foreground,
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+  formButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  formButton: {
+    flex: 1,
+  },
+  // Traditional Wallet Styles
+  traditionalCard: {
+    backgroundColor: colors.muted,
+  },
+  traditionalTitle: {
+    ...typography.brutalSmall,
+    color: colors.foreground,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  traditionalDescription: {
+    ...typography.body,
+    color: colors.mutedForeground,
+    textAlign: 'center',
+    marginBottom: 20,
   },
   optionsContainer: {
     gap: 16,
@@ -155,19 +306,20 @@ const styles = StyleSheet.create({
   guestButton: {
     marginBottom: 8,
   },
-  supportedCard: {
+  // Network Info Styles
+  networkCard: {
     backgroundColor: colors.muted,
   },
-  supportedTitle: {
+  networkTitle: {
     ...typography.brutalSmall,
     color: colors.foreground,
     marginBottom: 16,
     textAlign: 'center',
   },
-  walletList: {
+  networkInfo: {
     gap: 8,
   },
-  walletItem: {
+  networkItem: {
     ...typography.body,
     color: colors.mutedForeground,
   },

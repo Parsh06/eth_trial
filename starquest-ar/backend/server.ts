@@ -13,6 +13,7 @@ import questRoutes from './routes/quest';
 import starRoutes from './routes/star';
 import leaderboardRoutes from './routes/leaderboard';
 import walletRoutes from './routes/wallet';
+import locationRoutes from './routes/location';
 
 // Import services
 import { Web3Service } from './services/Web3Service';
@@ -64,6 +65,7 @@ app.use('/api/quest', questRoutes);
 app.use('/api/star', starRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/wallet', walletRoutes);
+app.use('/api/location', locationRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

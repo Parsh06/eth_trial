@@ -11,6 +11,17 @@ export interface Star {
     rarity: 'common' | 'rare' | 'epic' | 'legendary';
     image: string;
   };
+  blockchainData?: {
+    starId: number;
+    latitude: number;
+    longitude: number;
+    starType: number;
+    basePayout: string;
+    radius: number;
+    totalStaked: string;
+    playerCount: number;
+    isActive: boolean;
+  };
 }
 
 export interface Challenge {
@@ -92,4 +103,10 @@ export interface GameContextType {
   handleChallengeComplete: (success: boolean) => void;
   handleDisconnectWallet: () => void;
   handleQRScan: (data: string) => void;
+  // Blockchain methods
+  connectHederaWallet: (privateKey: string) => Promise<boolean>;
+  createStake: (starId: number, amount: string) => Promise<any>;
+  completeChallenge: (starId: number, success: boolean, proof?: string) => Promise<any>;
+  getPlayerStats: () => Promise<any>;
+  getContractStats: () => Promise<any>;
 }

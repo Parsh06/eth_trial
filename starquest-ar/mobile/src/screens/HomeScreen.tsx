@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,8 @@ import {
   ScrollView,
   Dimensions,
   TouchableOpacity,
+  Alert,
+  TextInput,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useGame } from '../context/GameContext';
@@ -15,16 +17,61 @@ import { NeoCard } from '../components/ui/NeoCard';
 import { ProgressBar } from '../components/ui/ProgressBar';
 import { colors } from '../utils/colors';
 import { typography } from '../utils/typography';
+import { starQuestService } from '../services/StarQuestService';
 
 const { width, height } = Dimensions.get('window');
 
 export const HomeScreen: React.FC = () => {
-  const { user, stars, quests, handleTabChange, handleChallengeSelect } = useGame();
+  const { user, stars, quests, handleTabChange, handleChallengeSelect, createStake, getContractStats } = useGame();
+  const [contractStats, setContractStats] = useState<any>(null);
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [balance, setBalance] = useState<string>('0');
+  const [stakingAmount, setStakingAmount] = useState<string>('0.1');
+  const [selectedStar, setSelectedStar] = useState<number>(0);
 
   const completedStars = stars.filter(star => star.status === 'completed').length;
   const totalStars = stars.length;
   const completedQuests = quests.filter(quest => quest.completed).length;
   const totalQuests = quests.length;
+
+  useEffect(() => {
+    loadBlockchainData();
+  }, []);
+
+  const loadBlockchainData = async () => {
+    try {
+      const address = await starQuestService.getWalletAddress();
+      if (address) {
+        setWalletAddress(address);
+        const balance = await starQuestService.getBalance();
+        setBalance(balance);
+      }
+      
+      const stats = await getContractStats();
+      setContractStats(stats);
+    } catch (error) {
+      console.error('Failed to load blockchain data:', error);
+    }
+  };
+
+  const handleCreateStake = async () => {
+    if (!stakingAmount || parseFloat(stakingAmount) <= 0) {
+      Alert.alert('Error', 'Please enter a valid staking amount');
+      return;
+    }
+
+    try {
+      const result = await createStake(selectedStar, stakingAmount);
+      if (result.success) {
+        Alert.alert('Success!', `Stake created successfully! Transaction: ${result.hash?.slice(0, 10)}...`);
+        await loadBlockchainData();
+      } else {
+        Alert.alert('Error', result.error || 'Failed to create stake');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to create stake');
+    }
+  };
 
   const quickActions = [
     {
@@ -240,6 +287,87 @@ export const HomeScreen: React.FC = () => {
             />
           </NeoCard>
         </View>
+
+        {/* Blockchain Section */}
+        {walletAddress && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>🌟 StarQuest Blockchain</Text>
+            
+            {/* Wallet Info */}
+            <NeoCard style={styles.blockchainCard}>
+              <Text style={styles.blockchainTitle}>Wallet Connected</Text>
+              <Text style={styles.walletInfo}>
+                {walletAddress.slice(0, 10)}...{walletAddress.slice(-8)}
+              </Text>
+              <Text style={styles.balanceInfo}>Balance: {balance} HBAR</Text>
+            </NeoCard>
+
+            {/* Contract Stats */}
+            {contractStats && (
+              <NeoCard style={styles.blockchainCard}>
+                <Text style={styles.blockchainTitle}>Contract Statistics</Text>
+                <View style={styles.statsRow}>
+                  <Text style={styles.statText}>Total Stars: {contractStats.totalStars}</Text>
+                  <Text style={styles.statText}>Total Staked: {contractStats.totalStaked} HBAR</Text>
+                </View>
+                <View style={styles.statsRow}>
+                  <Text style={styles.statText}>Total Players: {contractStats.totalPlayers}</Text>
+                  <Text style={styles.statText}>Status: {contractStats.isPaused ? 'Paused' : 'Active'}</Text>
+                </View>
+              </NeoCard>
+            )}
+
+            {/* Staking Section */}
+            <NeoCard style={styles.stakingCard}>
+              <Text style={styles.blockchainTitle}>Create Stake</Text>
+              <Text style={styles.stakingDescription}>
+                Stake HBAR on a star to participate in challenges and earn rewards
+              </Text>
+              
+              <View style={styles.stakingForm}>
+                <Text style={styles.formLabel}>Select Star:</Text>
+                <View style={styles.starSelector}>
+                  {stars.slice(0, 4).map((star, index) => (
+                    <TouchableOpacity
+                      key={star.id}
+                      style={[
+                        styles.starOption,
+                        selectedStar === index && styles.starOptionSelected
+                      ]}
+                      onPress={() => setSelectedStar(index)}
+                    >
+                      <Text style={styles.starOptionText}>Star {index}</Text>
+                      {star.blockchainData && (
+                        <Text style={styles.starOptionPayout}>
+                          {star.blockchainData.basePayout} HBAR
+                        </Text>
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <Text style={styles.formLabel}>Stake Amount (HBAR):</Text>
+                <TextInput
+                  style={styles.amountInput}
+                  value={stakingAmount}
+                  onChangeText={setStakingAmount}
+                  placeholder="0.1"
+                  keyboardType="numeric"
+                  placeholderTextColor={colors.mutedForeground}
+                />
+
+                <NeoButton
+                  title="Create Stake"
+                  onPress={handleCreateStake}
+                  variant="gradient"
+                  gradient={[colors.electricGreen, colors.electricCyan]}
+                  size="large"
+                  style={styles.stakeButton}
+                />
+              </View>
+            </NeoCard>
+          </View>
+        )}
 
         {/* Bottom Spacing */}
         <View style={styles.bottomSpacing} />
@@ -477,6 +605,98 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   featuredButton: {
+    width: '100%',
+  },
+  // Blockchain Styles
+  blockchainCard: {
+    backgroundColor: colors.electricPurple + '10',
+    borderColor: colors.electricPurple,
+    borderWidth: 1,
+    marginBottom: 16,
+  },
+  blockchainTitle: {
+    ...typography.brutalSmall,
+    color: colors.electricPurple,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  walletInfo: {
+    ...typography.body,
+    color: colors.foreground,
+    textAlign: 'center',
+    marginBottom: 8,
+    fontFamily: 'monospace',
+  },
+  balanceInfo: {
+    ...typography.body,
+    color: colors.mutedForeground,
+    textAlign: 'center',
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  statText: {
+    ...typography.bodySmall,
+    color: colors.mutedForeground,
+    flex: 1,
+  },
+  stakingCard: {
+    backgroundColor: colors.electricGreen + '10',
+    borderColor: colors.electricGreen,
+    borderWidth: 1,
+  },
+  stakingDescription: {
+    ...typography.body,
+    color: colors.mutedForeground,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  stakingForm: {
+    gap: 16,
+  },
+  formLabel: {
+    ...typography.brutalSmall,
+    color: colors.foreground,
+  },
+  starSelector: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  starOption: {
+    backgroundColor: colors.muted,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+    minWidth: 80,
+  },
+  starOptionSelected: {
+    backgroundColor: colors.electricGreen + '20',
+    borderColor: colors.electricGreen,
+  },
+  starOptionText: {
+    ...typography.bodySmall,
+    color: colors.foreground,
+    marginBottom: 4,
+  },
+  starOptionPayout: {
+    ...typography.caption,
+    color: colors.mutedForeground,
+  },
+  amountInput: {
+    ...typography.body,
+    backgroundColor: colors.muted,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    color: colors.foreground,
+  },
+  stakeButton: {
     width: '100%',
   },
   bottomSpacing: {

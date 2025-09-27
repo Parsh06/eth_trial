@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,10 @@ import {
   ScrollView,
   Dimensions,
   Switch,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
+import * as Location from 'expo-location';
 import { useGame } from '../context/GameContext';
 import { MobileLayout } from '../components/layout/MobileLayout';
 import { NeoButton } from '../components/ui/NeoButton';
@@ -16,114 +19,278 @@ import { OpenStreetMapView } from '../components/OpenStreetMapView';
 import { colors } from '../utils/colors';
 import { typography } from '../utils/typography';
 import { Star } from '../types';
+import { api } from '../services/api';
 
 const { width } = Dimensions.get('window');
 const GRID_SIZE = 3;
 const CELL_SIZE = (width - 60) / GRID_SIZE;
 
+interface NearbyStar {
+  _id: string;
+  name: string;
+  description: string;
+  rarity: string;
+  type: string;
+  location: {
+    name: string;
+    coordinates: {
+      latitude: number;
+      longitude: number;
+    };
+  };
+  metadata: {
+    arModel?: string;
+    animation?: string;
+    sound?: string;
+    particleEffect?: string;
+    glowColor?: string;
+    size: number;
+    rotation: { x: number; y: number; z: number };
+  };
+  rewards: {
+    experience: number;
+    tokens?: number;
+    nft?: string;
+  };
+  status: string;
+  distance: number;
+  isNearby: boolean;
+}
+
 export const MapScreen: React.FC = () => {
   const { stars, handleChallengeSelect } = useGame();
-  const [selectedStar, setSelectedStar] = useState<Star | null>(null);
+  const [selectedStar, setSelectedStar] = useState<NearbyStar | null>(null);
   const [showMapView, setShowMapView] = useState(true);
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [nearbyStars, setNearbyStars] = useState<NearbyStar[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [locationPermission, setLocationPermission] = useState<boolean>(false);
 
-  const getStarColor = (status: Star['status']) => {
-    switch (status) {
-      case 'available':
-        return colors.starAvailable;
-      case 'completed':
-        return colors.starCompleted;
-      case 'locked':
-        return colors.starLocked;
+  // Request location permission and get current location
+  useEffect(() => {
+    requestLocationPermission();
+  }, []);
+
+  const requestLocationPermission = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status === 'granted') {
+        setLocationPermission(true);
+        const location = await Location.getCurrentPositionAsync({});
+        const coords = {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        };
+        setUserLocation(coords);
+        fetchNearbyStars(coords);
+      } else {
+        Alert.alert(
+          'Location Permission Required',
+          'Please enable location access to discover nearby stars and challenges.',
+          [{ text: 'OK' }]
+        );
+      }
+    } catch (error) {
+      console.error('Error getting location:', error);
+      Alert.alert('Error', 'Failed to get your location. Please try again.');
+    }
+  };
+
+  const fetchNearbyStars = async (location: { latitude: number; longitude: number }) => {
+    try {
+      setLoading(true);
+      const response = await api.get('/location/nearby', {
+        params: {
+          latitude: location.latitude,
+          longitude: location.longitude,
+          radius: 1000, // 1km radius
+        },
+      });
+
+      if (response.data.success) {
+        setNearbyStars(response.data.stars);
+      }
+    } catch (error) {
+      console.error('Error fetching nearby stars:', error);
+      Alert.alert('Error', 'Failed to load nearby stars. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDiscoverStar = async (star: NearbyStar) => {
+    if (!userLocation) return;
+
+    try {
+      setLoading(true);
+      const response = await api.post(`/location/discover/${star._id}`, {
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude,
+      });
+
+      if (response.data.success) {
+        Alert.alert(
+          'Star Discovered!',
+          `You found ${star.name}! You earned ${star.rewards.experience} XP and ${star.rewards.tokens || 0} tokens.`,
+          [{ text: 'Awesome!', onPress: () => fetchNearbyStars(userLocation) }]
+        );
+      }
+    } catch (error: any) {
+      console.error('Error discovering star:', error);
+      Alert.alert('Error', error.response?.data?.error || 'Failed to discover star.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStartARChallenge = async (star: NearbyStar) => {
+    if (!userLocation) return;
+
+    try {
+      setLoading(true);
+      const response = await api.post(`/location/challenge/${star._id}/start`, {
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude,
+      });
+
+      if (response.data.success) {
+        // Navigate to AR screen with challenge data
+        // This would integrate with your AR navigation
+        Alert.alert(
+          'AR Challenge Started!',
+          'Get ready to interact with the star in AR mode!',
+          [{ text: 'Start AR', onPress: () => {
+            // Navigate to AR screen
+            // navigation.navigate('ARChallenge', { challenge: response.data.challenge });
+          }}]
+        );
+      }
+    } catch (error: any) {
+      console.error('Error starting AR challenge:', error);
+      Alert.alert('Error', error.response?.data?.error || 'Failed to start AR challenge.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getStarColor = (rarity: string) => {
+    switch (rarity) {
+      case 'legendary':
+        return colors.electricOrange;
+      case 'epic':
+        return colors.electricPurple;
+      case 'rare':
+        return colors.info;
+      case 'uncommon':
+        return colors.warning;
+      case 'common':
+        return colors.success;
       default:
         return colors.muted;
     }
   };
 
-  const getStarIcon = (status: Star['status']) => {
-    switch (status) {
-      case 'available':
+  const getStarIcon = (rarity: string) => {
+    switch (rarity) {
+      case 'legendary':
+        return '🌟';
+      case 'epic':
         return '⭐';
-      case 'completed':
-        return '✅';
-      case 'locked':
-        return '🔒';
+      case 'rare':
+        return '✨';
+      case 'uncommon':
+        return '💫';
+      case 'common':
+        return '⭐';
       default:
         return '⭐';
     }
   };
 
-  const handleStarPress = (star: Star) => {
-    if (star.status === 'locked') {
-      return;
-    }
+  const handleStarPress = (star: NearbyStar) => {
     setSelectedStar(star);
   };
 
-  const handleStartChallenge = () => {
-    if (selectedStar) {
-      handleChallengeSelect(selectedStar.id);
-    }
+  const handleLocationChange = (location: { latitude: number; longitude: number }) => {
+    setUserLocation(location);
+    fetchNearbyStars(location);
   };
 
-  const renderStarGrid = () => {
-    const grid = [];
-    for (let row = 0; row < 4; row++) {
-      for (let col = 0; col < GRID_SIZE; col++) {
-        const star = stars.find(s => s.position.x === col + 1 && s.position.y === row + 1);
-        const index = row * GRID_SIZE + col;
+  const renderNearbyStarsList = () => {
+    if (loading) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.loadingText}>Finding nearby stars...</Text>
+        </View>
+      );
+    }
+
+    if (nearbyStars.length === 0) {
+      return (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyTitle}>No stars nearby</Text>
+          <Text style={styles.emptyDescription}>
+            Walk around to discover hidden stars in your area!
+          </Text>
+        </View>
+      );
+    }
+
+    return nearbyStars.map((star) => (
+      <TouchableOpacity
+        key={star._id}
+        style={[
+          styles.starCard,
+          selectedStar?._id === star._id && styles.selectedStarCard,
+        ]}
+        onPress={() => handleStarPress(star)}
+      >
+        <View style={[
+          styles.starIconContainer,
+          { backgroundColor: getStarColor(star.rarity) }
+        ]}>
+          <Text style={styles.starIcon}>{getStarIcon(star.rarity)}</Text>
+        </View>
         
-        grid.push(
-          <TouchableOpacity
-            key={index}
-            style={[
-              styles.starCell,
-              { width: CELL_SIZE, height: CELL_SIZE },
-              selectedStar?.id === star?.id && styles.selectedCell,
-            ]}
-            onPress={() => star && handleStarPress(star)}
-            disabled={!star}
-          >
-            {star ? (
-              <View style={[
-                styles.starContainer,
-                { backgroundColor: getStarColor(star.status) },
-                star.status === 'locked' && styles.lockedStar,
-              ]}>
-                <Text style={styles.starIcon}>
-                  {getStarIcon(star.status)}
-                </Text>
-                <Text style={styles.starName}>{star.name}</Text>
-                <Text style={styles.starDifficulty}>
-                  {star.difficulty.toUpperCase()}
-                </Text>
-              </View>
-            ) : (
-              <View style={styles.emptyCell}>
-                <Text style={styles.emptyText}>?</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        );
-      }
-    }
-    return grid;
+        <View style={styles.starInfo}>
+          <Text style={styles.starName}>{star.name}</Text>
+          <Text style={styles.starDescription} numberOfLines={2}>
+            {star.description}
+          </Text>
+          <View style={styles.starDetails}>
+            <Text style={styles.starRarity}>{star.rarity.toUpperCase()}</Text>
+            <Text style={styles.starDistance}>{Math.round(star.distance)}m away</Text>
+          </View>
+          <View style={styles.rewardInfo}>
+            <Text style={styles.rewardText}>
+              {star.rewards.experience} XP • {star.rewards.tokens || 0} tokens
+            </Text>
+          </View>
+        </View>
+
+        {star.isNearby && (
+          <View style={styles.nearbyBadge}>
+            <Text style={styles.nearbyText}>NEARBY</Text>
+          </View>
+        )}
+      </TouchableOpacity>
+    ));
   };
 
-  // Convert mock stars to map format with real coordinates around user location
-  const mapStars = userLocation ? stars.map((star, index) => ({
-    id: star.id,
+  // Convert nearby stars to map format
+  const mapStars = nearbyStars.map((star) => ({
+    id: star._id,
     name: star.name,
     status: star.status,
     position: {
-      latitude: userLocation.latitude + (Math.random() - 0.5) * 0.01, // Within ~500m radius
-      longitude: userLocation.longitude + (Math.random() - 0.5) * 0.01,
+      latitude: star.location.coordinates.latitude,
+      longitude: star.location.coordinates.longitude,
     },
-  })) : [];
-
-  const handleLocationChange = (location: { latitude: number; longitude: number }) => {
-    setUserLocation(location);
-  };
+    rarity: star.rarity,
+    distance: star.distance,
+    isNearby: star.isNearby,
+  }));
 
   return (
     <MobileLayout>
@@ -150,7 +317,7 @@ export const MapScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* Map or Grid View */}
+        {/* Map or List View */}
         {showMapView ? (
           <View style={styles.mapContainer}>
             <OpenStreetMapView
@@ -160,14 +327,8 @@ export const MapScreen: React.FC = () => {
             />
           </View>
         ) : (
-          <ScrollView style={styles.gridScrollView} showsVerticalScrollIndicator={false}>
-
-        {/* Star Grid */}
-        <View style={styles.gridContainer}>
-          <View style={styles.grid}>
-            {renderStarGrid()}
-          </View>
-        </View>
+          <ScrollView style={styles.listScrollView} showsVerticalScrollIndicator={false}>
+            {renderNearbyStarsList()}
 
         {/* Star Details */}
         {selectedStar && (
@@ -179,53 +340,54 @@ export const MapScreen: React.FC = () => {
             
             <View style={styles.starInfo}>
               <View style={styles.infoItem}>
-                <Text style={styles.infoLabel}>Difficulty</Text>
-                <Text style={[styles.infoValue, { 
-                  color: selectedStar.difficulty === 'expert' ? colors.error : 
-                        selectedStar.difficulty === 'intermediate' ? colors.warning : 
-                        colors.success 
-                }]}>
-                  {selectedStar.difficulty.toUpperCase()}
-                </Text>
+                <Text style={styles.infoLabel}>Type</Text>
+                <Text style={styles.infoValue}>{selectedStar.type.toUpperCase()}</Text>
               </View>
               
               <View style={styles.infoItem}>
-                <Text style={styles.infoLabel}>Reward</Text>
-                <Text style={styles.infoValue}>{selectedStar.reward.name}</Text>
+                <Text style={styles.infoLabel}>Distance</Text>
+                <Text style={styles.infoValue}>{Math.round(selectedStar.distance)}m away</Text>
               </View>
               
               <View style={styles.infoItem}>
                 <Text style={styles.infoLabel}>Rarity</Text>
                 <Text style={[styles.infoValue, { 
-                  color: selectedStar.reward.rarity === 'legendary' ? colors.electricOrange :
-                        selectedStar.reward.rarity === 'epic' ? colors.electricPurple :
-                        selectedStar.reward.rarity === 'rare' ? colors.info :
-                        colors.mutedForeground
+                  color: getStarColor(selectedStar.rarity)
                 }]}>
-                  {selectedStar.reward.rarity.toUpperCase()}
+                  {selectedStar.rarity.toUpperCase()}
+                </Text>
+              </View>
+
+              <View style={styles.infoItem}>
+                <Text style={styles.infoLabel}>Rewards</Text>
+                <Text style={styles.infoValue}>
+                  {selectedStar.rewards.experience} XP • {selectedStar.rewards.tokens || 0} tokens
                 </Text>
               </View>
             </View>
 
-            {selectedStar.status === 'available' && (
-              <NeoButton
-                title="Start Challenge"
-                onPress={handleStartChallenge}
-                variant="electric"
-                size="lg"
-                style={styles.challengeButton}
-              />
-            )}
-
-            {selectedStar.status === 'completed' && (
-              <View style={styles.completedBadge}>
-                <Text style={styles.completedText}>✅ COMPLETED</Text>
+            {selectedStar.isNearby ? (
+              <View style={styles.actionButtons}>
+                <NeoButton
+                  title="Discover Star"
+                  onPress={() => handleDiscoverStar(selectedStar)}
+                  variant="electric"
+                  size="lg"
+                  style={styles.actionButton}
+                />
+                <NeoButton
+                  title="Start AR Challenge"
+                  onPress={() => handleStartARChallenge(selectedStar)}
+                  variant="secondary"
+                  size="lg"
+                  style={styles.actionButton}
+                />
               </View>
-            )}
-
-            {selectedStar.status === 'locked' && (
-              <View style={styles.lockedBadge}>
-                <Text style={styles.lockedText}>🔒 LOCKED</Text>
+            ) : (
+              <View style={styles.distanceWarning}>
+                <Text style={styles.distanceWarningText}>
+                  Get closer to discover this star! ({Math.round(selectedStar.distance)}m away)
+                </Text>
               </View>
             )}
           </NeoCard>
@@ -233,19 +395,27 @@ export const MapScreen: React.FC = () => {
 
             {/* Legend */}
             <NeoCard style={styles.legendCard}>
-              <Text style={styles.legendTitle}>Legend</Text>
+              <Text style={styles.legendTitle}>Star Rarity</Text>
               <View style={styles.legendItems}>
                 <View style={styles.legendItem}>
-                  <View style={[styles.legendDot, { backgroundColor: colors.starAvailable }]} />
-                  <Text style={styles.legendText}>Available</Text>
+                  <View style={[styles.legendDot, { backgroundColor: colors.electricOrange }]} />
+                  <Text style={styles.legendText}>Legendary</Text>
                 </View>
                 <View style={styles.legendItem}>
-                  <View style={[styles.legendDot, { backgroundColor: colors.starCompleted }]} />
-                  <Text style={styles.legendText}>Completed</Text>
+                  <View style={[styles.legendDot, { backgroundColor: colors.electricPurple }]} />
+                  <Text style={styles.legendText}>Epic</Text>
                 </View>
                 <View style={styles.legendItem}>
-                  <View style={[styles.legendDot, { backgroundColor: colors.starLocked }]} />
-                  <Text style={styles.legendText}>Locked</Text>
+                  <View style={[styles.legendDot, { backgroundColor: colors.info }]} />
+                  <Text style={styles.legendText}>Rare</Text>
+                </View>
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: colors.warning }]} />
+                  <Text style={styles.legendText}>Uncommon</Text>
+                </View>
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: colors.success }]} />
+                  <Text style={styles.legendText}>Common</Text>
                 </View>
               </View>
             </NeoCard>
@@ -291,10 +461,131 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.border,
   },
-  gridScrollView: {
+  listScrollView: {
     flex: 1,
     padding: 20,
     paddingTop: 0,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  loadingText: {
+    ...typography.body,
+    color: colors.mutedForeground,
+    marginTop: 16,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  emptyTitle: {
+    ...typography.brutalMedium,
+    color: colors.foreground,
+    marginBottom: 8,
+  },
+  emptyDescription: {
+    ...typography.body,
+    color: colors.mutedForeground,
+    textAlign: 'center',
+  },
+  starCard: {
+    flexDirection: 'row',
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 2,
+    borderColor: colors.border,
+    alignItems: 'center',
+  },
+  selectedStarCard: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primary + '10',
+  },
+  starIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+    borderWidth: 2,
+    borderColor: colors.foreground,
+  },
+  starInfo: {
+    flex: 1,
+  },
+  starName: {
+    ...typography.brutalSmall,
+    color: colors.foreground,
+    marginBottom: 4,
+  },
+  starDescription: {
+    ...typography.caption,
+    color: colors.mutedForeground,
+    marginBottom: 8,
+  },
+  starDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  starRarity: {
+    ...typography.caption,
+    color: colors.foreground,
+    fontWeight: '600',
+  },
+  starDistance: {
+    ...typography.caption,
+    color: colors.mutedForeground,
+  },
+  rewardInfo: {
+    marginTop: 4,
+  },
+  rewardText: {
+    ...typography.caption,
+    color: colors.success,
+    fontWeight: '600',
+  },
+  nearbyBadge: {
+    backgroundColor: colors.success,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: colors.foreground,
+  },
+  nearbyText: {
+    ...typography.caption,
+    color: colors.primaryForeground,
+    fontWeight: '700',
+    fontSize: 10,
+  },
+  actionButtons: {
+    gap: 12,
+    marginTop: 16,
+  },
+  actionButton: {
+    marginTop: 8,
+  },
+  distanceWarning: {
+    backgroundColor: colors.warning + '20',
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.warning,
+    marginTop: 16,
+  },
+  distanceWarningText: {
+    ...typography.body,
+    color: colors.warning,
+    textAlign: 'center',
+    fontWeight: '600',
   },
   title: {
     ...typography.brutalLarge,

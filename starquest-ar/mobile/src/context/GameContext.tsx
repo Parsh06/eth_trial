@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppState, User, Star, Challenge, Quest, LeaderboardEntry, GameContextType } from '../types';
 import apiService from '../services/api';
 import websocketService from '../services/websocket';
+import { starQuestService, Star as ContractStar, PlayerStats } from '../services/StarQuestService';
 
 // Mock data
 const mockUser: User = {
@@ -140,6 +141,27 @@ const mockLeaderboard: LeaderboardEntry[] = [
   }
 ];
 
+// Helper functions for blockchain data mapping
+const getStarTypeName = (starType: number): string => {
+  const types = ['Common', 'Uncommon', 'Rare', 'Epic', 'Legendary'];
+  return types[starType] || 'Unknown';
+};
+
+const getDifficultyFromStarType = (starType: number): string => {
+  const difficulties = ['beginner', 'beginner', 'intermediate', 'expert', 'expert'];
+  return difficulties[starType] || 'beginner';
+};
+
+const getRarityFromStarType = (starType: number): string => {
+  const rarities = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
+  return rarities[starType] || 'common';
+};
+
+const getColorFromStarType = (starType: number): string => {
+  const colors = ['8B5CF6', '10B981', 'F59E0B', 'EF4444', '7C3AED'];
+  return colors[starType] || '8B5CF6';
+};
+
 type GameAction = 
   | { type: 'PRELOADER_COMPLETE' }
   | { type: 'LANDING_COMPLETE' }
@@ -208,6 +230,48 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const loadInitialData = async () => {
     try {
       setLoading(true);
+      
+      // Try to load blockchain data first
+      let blockchainStars: Star[] = [];
+      let blockchainUser: User | null = null;
+      
+      try {
+        // Load stars from blockchain
+        const contractStars = await starQuestService.getAllStars();
+        blockchainStars = contractStars.map((contractStar: ContractStar) => ({
+          id: contractStar.id.toString(),
+          name: `Star ${contractStar.id}`,
+          description: `A ${getStarTypeName(contractStar.starType)} star with ${contractStar.basePayout} HBAR base payout`,
+          position: { 
+            x: contractStar.latitude, 
+            y: contractStar.longitude 
+          },
+          status: contractStar.isActive ? 'available' : 'locked',
+          difficulty: getDifficultyFromStarType(contractStar.starType),
+          reward: {
+            nftId: `nft-${contractStar.id}`,
+            name: `${getStarTypeName(contractStar.starType)} Star NFT`,
+            rarity: getRarityFromStarType(contractStar.starType),
+            image: `https://via.placeholder.com/200x200/${getColorFromStarType(contractStar.starType)}/FFFFFF?text=Star${contractStar.id}`
+          },
+          blockchainData: {
+            starId: contractStar.id,
+            latitude: contractStar.latitude,
+            longitude: contractStar.longitude,
+            starType: contractStar.starType,
+            basePayout: contractStar.basePayout,
+            radius: contractStar.radius,
+            totalStaked: contractStar.totalStaked,
+            playerCount: contractStar.playerCount,
+            isActive: contractStar.isActive
+          }
+        }));
+        
+        console.log(`Loaded ${blockchainStars.length} stars from blockchain`);
+      } catch (blockchainError) {
+        console.warn('Failed to load blockchain data, using mock data:', blockchainError);
+      }
+      
       // Load user profile if authenticated
       const userProfile = await apiService.getUserProfile();
       if (userProfile.success) {
@@ -221,9 +285,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
         apiService.getLeaderboard('stars'),
       ]);
       
-      setStars(starsData.stars || []);
-      setQuests(questsData.quests || []);
-      setLeaderboard(leaderboardData.leaderboard || []);
+      // Use blockchain stars if available, otherwise fallback to API/mock data
+      const finalStars = blockchainStars.length > 0 ? blockchainStars : (starsData.stars || mockStars);
+      setStars(finalStars);
+      setQuests(questsData.quests || mockQuests);
+      setLeaderboard(leaderboardData.leaderboard || mockLeaderboard);
+      
     } catch (error) {
       console.error('Error loading initial data:', error);
       setError('Failed to load data');
@@ -353,6 +420,111 @@ export function GameProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'QR_SCAN', data });
   };
 
+  // Blockchain-related methods
+  const connectHederaWallet = async (privateKey: string): Promise<boolean> => {
+    try {
+      setLoading(true);
+      const success = await starQuestService.connectWallet(privateKey);
+      
+      if (success) {
+        const address = await starQuestService.getWalletAddress();
+        if (address) {
+          // Update user with blockchain data
+          const playerStats = await starQuestService.getPlayerStats();
+          if (playerStats) {
+            const updatedUser: User = {
+              id: user?.id || 'blockchain-user',
+              walletAddress: address,
+              username: user?.username || 'BlockchainUser',
+              stats: {
+                starsFound: playerStats.starsFound,
+                questsCompleted: playerStats.challengesCompleted,
+                nftsEarned: 0, // This would come from HTS contract
+                streak: 0, // This would be calculated
+              },
+              achievements: user?.achievements || ['Blockchain Connected']
+            };
+            setUser(updatedUser);
+          }
+          
+          // Reload stars with blockchain data
+          await loadInitialData();
+          
+          return true;
+        }
+      }
+      return false;
+    } catch (error) {
+      console.error('Failed to connect Hedera wallet:', error);
+      setError('Failed to connect Hedera wallet');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createStake = async (starId: number, amount: string) => {
+    try {
+      setLoading(true);
+      const result = await starQuestService.createStake(starId, amount);
+      
+      if (result.success) {
+        // Reload data to reflect the new stake
+        await loadInitialData();
+        return result;
+      } else {
+        setError(result.error || 'Failed to create stake');
+        return result;
+      }
+    } catch (error) {
+      console.error('Failed to create stake:', error);
+      setError('Failed to create stake');
+      return { success: false, error: 'Failed to create stake' };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const completeChallenge = async (starId: number, success: boolean, proof?: string) => {
+    try {
+      setLoading(true);
+      const result = await starQuestService.completeChallenge(starId, success, proof);
+      
+      if (result.success) {
+        // Reload data to reflect the completed challenge
+        await loadInitialData();
+        return result;
+      } else {
+        setError(result.error || 'Failed to complete challenge');
+        return result;
+      }
+    } catch (error) {
+      console.error('Failed to complete challenge:', error);
+      setError('Failed to complete challenge');
+      return { success: false, error: 'Failed to complete challenge' };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getPlayerStats = async (): Promise<PlayerStats | null> => {
+    try {
+      return await starQuestService.getPlayerStats();
+    } catch (error) {
+      console.error('Failed to get player stats:', error);
+      return null;
+    }
+  };
+
+  const getContractStats = async () => {
+    try {
+      return await starQuestService.getContractStats();
+    } catch (error) {
+      console.error('Failed to get contract stats:', error);
+      return null;
+    }
+  };
+
   const value: GameContextType = {
     state,
     user,
@@ -370,7 +542,13 @@ export function GameProvider({ children }: { children: ReactNode }) {
     handleChallengeSelect,
     handleChallengeComplete,
     handleDisconnectWallet,
-    handleQRScan
+    handleQRScan,
+    // Blockchain methods
+    connectHederaWallet,
+    createStake,
+    completeChallenge,
+    getPlayerStats,
+    getContractStats
   };
 
   return (
