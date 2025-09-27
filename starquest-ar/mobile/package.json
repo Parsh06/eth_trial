@@ -39,6 +39,7 @@
     "expo-sensors": "~15.0.2",
     "expo-splash-screen": "~31.0.10",
     "expo-status-bar": "~3.0.8",
+    "force": "^0.0.3",
     "react": "19.1.0",
     "react-native": "0.81.4",
     "react-native-gesture-handler": "^2.20.2",
