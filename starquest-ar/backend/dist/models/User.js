@@ -101,6 +101,16 @@ const UserSchema = new mongoose_1.Schema({
         default: 0,
         min: 0
     },
+    starsDiscovered: {
+        type: Number,
+        default: 0,
+        min: 0
+    },
+    tokens: {
+        type: Number,
+        default: 0,
+        min: 0
+    },
     stats: {
         totalQuests: {
             type: Number,

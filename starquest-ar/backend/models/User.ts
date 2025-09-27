@@ -14,6 +14,8 @@ export interface IUser extends Document {
   nftsOwned: string[];
   achievements: string[];
   streak: number;
+  starsDiscovered: number;
+  tokens: number;
   stats: {
     totalQuests: number;
     completedQuests: number;
@@ -92,6 +94,16 @@ const UserSchema = new Schema<IUser>({
     type: String
   }],
   streak: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  starsDiscovered: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  tokens: {
     type: Number,
     default: 0,
     min: 0

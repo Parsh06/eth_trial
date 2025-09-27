@@ -55,6 +55,8 @@ export interface IStar extends Document {
     addDiscoverer(userId: string): Promise<IStar>;
     removeDiscoverer(userId: string): Promise<IStar>;
     updateStatus(newStatus: string): Promise<IStar>;
+    discover(userId: string): Promise<IStar>;
+    claim(userId: string): Promise<IStar>;
 }
 export declare const Star: mongoose.Model<IStar, {}, {}, {}, mongoose.Document<unknown, {}, IStar, {}, {}> & IStar & Required<{
     _id: unknown;

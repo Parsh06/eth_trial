@@ -13,6 +13,8 @@ export interface IUser extends Document {
     nftsOwned: string[];
     achievements: string[];
     streak: number;
+    starsDiscovered: number;
+    tokens: number;
     stats: {
         totalQuests: number;
         completedQuests: number;

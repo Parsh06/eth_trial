@@ -15,6 +15,8 @@ const user_1 = __importDefault(require("./routes/user"));
 const quest_1 = __importDefault(require("./routes/quest"));
 const star_1 = __importDefault(require("./routes/star"));
 const leaderboard_1 = __importDefault(require("./routes/leaderboard"));
+const wallet_1 = __importDefault(require("./routes/wallet"));
+const location_1 = __importDefault(require("./routes/location"));
 const Web3Service_1 = require("./services/Web3Service");
 const ARService_1 = require("./services/ARService");
 const NotificationService_1 = require("./services/NotificationService");
@@ -50,6 +52,8 @@ app.use('/api/user', user_1.default);
 app.use('/api/quest', quest_1.default);
 app.use('/api/star', star_1.default);
 app.use('/api/leaderboard', leaderboard_1.default);
+app.use('/api/wallet', wallet_1.default);
+app.use('/api/location', location_1.default);
 app.get('/api/health', (req, res) => {
     res.json({
         status: 'OK',

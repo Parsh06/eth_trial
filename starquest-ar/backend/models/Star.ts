@@ -58,6 +58,8 @@ export interface IStar extends Document {
   addDiscoverer(userId: string): Promise<IStar>;
   removeDiscoverer(userId: string): Promise<IStar>;
   updateStatus(newStatus: string): Promise<IStar>;
+  discover(userId: string): Promise<IStar>;
+  claim(userId: string): Promise<IStar>;
 }
 
 const StarSchema = new Schema<IStar>({
