@@ -46,18 +46,48 @@ export const OpenStreetMapView: React.FC<OpenStreetMapViewProps> = ({
     try {
       setLoading(true);
       setError(null);
+      console.log('🌍 Starting location request...');
 
       // Request location permissions
       const { status } = await Location.requestForegroundPermissionsAsync();
+      console.log('📍 Location permission status:', status);
+      
       if (status !== 'granted') {
+        console.log('❌ Location permission denied');
         setError('Location permission denied. Please enable location access in settings.');
         setLoading(false);
         return;
       }
 
-      // Get current position
+      // Check if location services are enabled
+      const isLocationEnabled = await Location.hasServicesEnabledAsync();
+      console.log('🛰️ Location services enabled:', isLocationEnabled);
+      
+      if (!isLocationEnabled) {
+        console.log('❌ Location services are disabled');
+        setError('Location services are disabled. Please enable them in your device settings.');
+        setLoading(false);
+        return;
+      }
+
+      console.log('📡 Requesting high accuracy location...');
+      
+      // Get current position with high accuracy
       const currentLocation = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.High,
+        accuracy: Location.Accuracy.BestForNavigation,
+        timeout: 15000,
+        maximumAge: 10000,
+      });
+
+      console.log('📍 Raw location data:', {
+        latitude: currentLocation.coords.latitude,
+        longitude: currentLocation.coords.longitude,
+        accuracy: currentLocation.coords.accuracy,
+        altitude: currentLocation.coords.altitude,
+        altitudeAccuracy: currentLocation.coords.altitudeAccuracy,
+        heading: currentLocation.coords.heading,
+        speed: currentLocation.coords.speed,
+        timestamp: new Date(currentLocation.timestamp).toISOString(),
       });
 
       const coords = {
@@ -65,24 +95,39 @@ export const OpenStreetMapView: React.FC<OpenStreetMapViewProps> = ({
         longitude: currentLocation.coords.longitude,
       };
 
+      console.log('✅ Location successfully obtained:', coords);
+      console.log('🎯 Location accuracy:', currentLocation.coords.accuracy, 'meters');
+
       setLocation(coords);
       onLocationChange?.(coords);
       setLoading(false);
     } catch (error) {
-      console.error('Error getting location:', error);
+      console.error('❌ Error getting location:', error);
+      console.log('🔍 Error details:', {
+        name: error.name,
+        message: error.message,
+        code: error.code,
+      });
       setError('Failed to get current location. Please try again.');
       setLoading(false);
     }
   };
 
   const generateMapHTML = () => {
-    if (!location) return '';
+    if (!location) {
+      console.log('⚠️ No location available for map generation');
+      return '';
+    }
 
+    console.log('🗺️ Generating map HTML with location:', location);
+    
     const starsData = showStars ? JSON.stringify(stars.map(star => ({
       ...star,
       lat: star.position.latitude,
       lng: star.position.longitude,
     }))) : '[]';
+    
+    console.log('⭐ Stars data for map:', starsData);
 
     return `
     <!DOCTYPE html>
@@ -146,15 +191,18 @@ export const OpenStreetMapView: React.FC<OpenStreetMapViewProps> = ({
         <div id="map"></div>
         <script>
             // Initialize map
+            console.log('🗺️ WebView: Initializing map with coordinates:', ${location.latitude}, ${location.longitude});
             const map = L.map('map').setView([${location.latitude}, ${location.longitude}], 15);
 
             // Add OpenStreetMap tiles
+            console.log('🌍 WebView: Adding OpenStreetMap tiles');
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors',
                 maxZoom: 19,
             }).addTo(map);
 
             // Add current location marker
+            console.log('📍 WebView: Adding location marker at:', ${location.latitude}, ${location.longitude});
             const locationIcon = L.divIcon({
                 className: 'custom-div-icon',
                 html: '<div class="location-marker"></div>',
@@ -166,11 +214,13 @@ export const OpenStreetMapView: React.FC<OpenStreetMapViewProps> = ({
                 icon: locationIcon 
             }).addTo(map);
 
-            locationMarker.bindPopup('<b>📍 Your Location</b><br/>You are here!');
+            locationMarker.bindPopup('<b>📍 Your Location</b><br/>You are here!<br/>Lat: ${location.latitude.toFixed(6)}<br/>Lng: ${location.longitude.toFixed(6)}');
 
             // Add stars if provided
             const starsData = ${starsData};
-            starsData.forEach(star => {
+            console.log('⭐ WebView: Processing stars data:', starsData.length, 'stars');
+            starsData.forEach((star, index) => {
+                console.log(\`⭐ WebView: Adding star \${index + 1}:\`, star.name, 'at', star.lat, star.lng);
                 const starIcon = L.divIcon({
                     className: 'custom-div-icon',
                     html: \`<div class="star-marker star-\${star.status}">
@@ -214,18 +264,21 @@ export const OpenStreetMapView: React.FC<OpenStreetMapViewProps> = ({
 
             // Handle location updates
             function updateLocation(lat, lng) {
+                console.log('🔄 WebView: Updating location to:', lat, lng);
                 locationMarker.setLatLng([lat, lng]);
                 accuracyCircle.setLatLng([lat, lng]);
                 map.setView([lat, lng], map.getZoom());
             }
 
             // Notify React Native that map is ready
+            console.log('✅ WebView: Map is ready, notifying React Native');
             window.ReactNativeWebView?.postMessage(JSON.stringify({
                 type: 'mapReady'
             }));
 
             // Handle map events
             map.on('click', (e) => {
+                console.log('🗺️ WebView: Map clicked at:', e.latlng.lat, e.latlng.lng);
                 window.ReactNativeWebView?.postMessage(JSON.stringify({
                     type: 'mapClick',
                     latitude: e.latlng.lat,
@@ -241,12 +294,15 @@ export const OpenStreetMapView: React.FC<OpenStreetMapViewProps> = ({
   const handleWebViewMessage = (event: any) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
+      console.log('📱 WebView message received:', data);
       
       switch (data.type) {
         case 'mapReady':
+          console.log('🗺️ Map is ready for interaction');
           setMapReady(true);
           break;
         case 'starClick':
+          console.log('⭐ Star clicked:', data.starId, data.star);
           Alert.alert(
             `${data.star.name}`,
             `Status: ${data.star.status.toUpperCase()}\n\nWould you like to start a challenge for this star?`,
@@ -254,27 +310,38 @@ export const OpenStreetMapView: React.FC<OpenStreetMapViewProps> = ({
               { text: 'Cancel', style: 'cancel' },
               { text: 'Start Challenge', onPress: () => {
                 // Handle star challenge start
-                console.log('Starting challenge for star:', data.starId);
+                console.log('🎯 Starting challenge for star:', data.starId);
               }},
             ]
           );
           break;
         case 'mapClick':
-          console.log('Map clicked at:', data.latitude, data.longitude);
+          console.log('🗺️ Map clicked at coordinates:', {
+            latitude: data.latitude,
+            longitude: data.longitude,
+            currentLocation: location,
+          });
           break;
       }
     } catch (error) {
-      console.error('Error parsing WebView message:', error);
+      console.error('❌ Error parsing WebView message:', error);
+      console.log('🔍 Raw message data:', event.nativeEvent.data);
     }
   };
 
   const centerOnLocation = () => {
     if (webViewRef.current && location) {
+      console.log('🎯 Centering map on location:', location);
       webViewRef.current.postMessage(JSON.stringify({
         type: 'centerOnLocation',
         latitude: location.latitude,
         longitude: location.longitude,
       }));
+    } else {
+      console.log('⚠️ Cannot center on location - WebView or location not available:', {
+        hasWebView: !!webViewRef.current,
+        hasLocation: !!location,
+      });
     }
   };
 

@@ -13,6 +13,7 @@ import { MobileLayout } from '../components/layout/MobileLayout';
 import { NeoButton } from '../components/ui/NeoButton';
 import { NeoCard } from '../components/ui/NeoCard';
 import { OpenStreetMapView } from '../components/OpenStreetMapView';
+import { LocationDebugger } from '../components/LocationDebugger';
 import { colors } from '../utils/colors';
 import { typography } from '../utils/typography';
 import { Star } from '../types';
@@ -122,7 +123,21 @@ export const MapScreen: React.FC = () => {
   })) : [];
 
   const handleLocationChange = (location: { latitude: number; longitude: number }) => {
+    console.log('🗺️ MapScreen: Location changed:', location);
+    console.log('📊 MapScreen: Previous location:', userLocation);
+    
+    if (userLocation) {
+      const latDiff = Math.abs(location.latitude - userLocation.latitude);
+      const lngDiff = Math.abs(location.longitude - userLocation.longitude);
+      console.log('📏 Location change delta:', {
+        latitudeDelta: latDiff,
+        longitudeDelta: lngDiff,
+        significantChange: latDiff > 0.0001 || lngDiff > 0.0001, // ~11m
+      });
+    }
+    
     setUserLocation(location);
+    console.log('⭐ Generated map stars around location:', mapStars.length);
   };
 
   return (
@@ -251,6 +266,9 @@ export const MapScreen: React.FC = () => {
             </NeoCard>
           </ScrollView>
         )}
+        
+        {/* Location Debugger */}
+        <LocationDebugger />
       </View>
     </MobileLayout>
   );
