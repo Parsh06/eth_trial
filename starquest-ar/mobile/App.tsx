@@ -123,9 +123,9 @@ const App: React.FC = () => {
     <ErrorBoundary>
       <WagmiProvider config={wagmiConfig}>
         <QueryClientProvider client={queryClient}>
-          <GameProvider>
-            <AppContent />
-          </GameProvider>
+      <GameProvider>
+        <AppContent />
+      </GameProvider>
         </QueryClientProvider>
       </WagmiProvider>
     </ErrorBoundary>

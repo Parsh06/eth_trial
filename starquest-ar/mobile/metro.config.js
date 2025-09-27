@@ -36,4 +36,20 @@ config.transformer = {
   }),
 };
 
+// Reduce file watching for systems with limited watchers
+config.watcher = {
+  ...config.watcher,
+  watchman: {
+    deferStates: ["hg.update", "hg.update-merge"],
+  },
+  healthCheck: {
+    enabled: true,
+    interval: 10000,
+    timeout: 5000,
+  },
+};
+
+// Limit the scope of file watching
+config.watchFolders = [];
+
 module.exports = config;

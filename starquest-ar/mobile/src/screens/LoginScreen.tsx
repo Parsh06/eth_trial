@@ -73,39 +73,39 @@ export const LoginScreen: React.FC = () => {
         try {
           setIsConnecting(true);
           setConnectionStatus('Requesting signature for authentication...');
-          
-          // Sign a message for authentication
+      
+      // Sign a message for authentication
           const message = `Welcome to StarQuest AR!\n\nPlease sign this message to authenticate your wallet.\n\nWallet: ${address}\nTimestamp: ${Date.now()}`;
           const signature = await signMessageAsync({ 
             account: address as `0x${string}`,
             message 
           });
-          
-          // Connect to the app with signature and message
-          setConnectionStatus('Authenticating with StarQuest...');
+      
+      // Connect to the app with signature and message
+      setConnectionStatus('Authenticating with StarQuest...');
           await handleWalletConnect(address, signature, message);
-          
-          setConnectionStatus('Welcome to StarQuest AR! 🌟');
-          console.log('Wallet connected successfully with signature verification');
-          
-        } catch (error: any) {
+      
+      setConnectionStatus('Welcome to StarQuest AR! 🌟');
+      console.log('Wallet connected successfully with signature verification');
+      
+    } catch (error: any) {
           console.error('Authentication error:', error);
-          setConnectionStatus('');
-          
-          // Handle specific error types
+      setConnectionStatus('');
+      
+      // Handle specific error types
           let errorMessage = 'Failed to authenticate wallet. Please try again.';
           let errorTitle = 'Authentication Failed';
-          
-          if (error.message.includes('User rejected')) {
+      
+      if (error.message.includes('User rejected')) {
             errorMessage = 'Signature was cancelled. Please try again to complete authentication.';
             errorTitle = 'Signature Cancelled';
-          }
-          
-          Alert.alert(errorTitle, errorMessage, [{ text: 'OK', style: 'default' }]);
-        } finally {
-          setIsConnecting(false);
-        }
-      };
+      }
+      
+      Alert.alert(errorTitle, errorMessage, [{ text: 'OK', style: 'default' }]);
+    } finally {
+      setIsConnecting(false);
+    }
+  };
 
       authenticateWallet();
     }
