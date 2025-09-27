@@ -220,12 +220,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   heroSection: {
-    padding: 40,
-    paddingTop: 60,
+    padding: 32,
+    paddingTop: 80,
     paddingBottom: 60,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: height * 0.6,
+    minHeight: height * 0.7,
   },
   heroContent: {
     alignItems: 'center',

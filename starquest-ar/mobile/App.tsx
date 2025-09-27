@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, StatusBar } from "react-native";
 import { GameProvider, useGame } from "./src/context/GameContext";
+import { ErrorBoundary } from "./src/components/ErrorBoundary";
 import { Preloader } from "./src/components/Preloader";
 import { LandingScreen } from "./src/screens/LandingScreen";
 import { LoginScreen } from "./src/screens/LoginScreen";
@@ -113,9 +114,11 @@ const AppContent: React.FC = () => {
 // Main App component with providers
 const App: React.FC = () => {
   return (
-    <GameProvider>
-      <AppContent />
-    </GameProvider>
+    <ErrorBoundary>
+      <GameProvider>
+        <AppContent />
+      </GameProvider>
+    </ErrorBoundary>
   );
 };
 

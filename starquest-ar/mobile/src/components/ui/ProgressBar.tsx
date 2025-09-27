@@ -61,44 +61,38 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   const sizeStyles = getSizeStyles();
 
   return (
-    <View style={[styles.container, style]}>
+    <View style={{ ...styles.container, ...style }}>
       {label && (
-        <Text style={[styles.label, textStyle]}>{label}</Text>
+        <Text style={{ ...styles.label, ...textStyle }}>{label}</Text>
       )}
       <View style={styles.progressContainer}>
         <View
-          style={[
-            styles.progressBar,
-            {
-              height: sizeStyles.height,
-              backgroundColor: colors.muted,
-              borderRadius: sizeStyles.borderRadius,
-            },
-          ]}
+          style={{
+            ...styles.progressBar,
+            height: sizeStyles.height,
+            backgroundColor: colors.muted,
+            borderRadius: sizeStyles.borderRadius,
+          }}
         >
           <LinearGradient
             colors={[colors_variant.bg, colors_variant.bg + 'CC']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
-            style={[
-              styles.progressFill,
-              {
-                width: `${percentage}%`,
-                height: sizeStyles.height,
-                borderRadius: sizeStyles.borderRadius,
-              },
-            ]}
+            style={{
+              ...styles.progressFill,
+              width: `${percentage}%`,
+              height: sizeStyles.height,
+              borderRadius: sizeStyles.borderRadius,
+            }}
           />
         </View>
         {showPercentage && (
           <Text
-            style={[
-              styles.percentage,
-              {
-                color: colors_variant.text,
-                fontSize: sizeStyles.fontSize,
-              },
-            ]}
+            style={{
+              ...styles.percentage,
+              color: colors_variant.text,
+              fontSize: sizeStyles.fontSize,
+            }}
           >
             {Math.round(percentage)}%
           </Text>

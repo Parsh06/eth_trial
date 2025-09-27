@@ -22,17 +22,18 @@ export const NeoCard: React.FC<NeoCardProps> = ({
 }) => {
   const getCardStyle = (): ViewStyle => {
     const baseStyle: ViewStyle = {
-      borderRadius: 16,
+      borderRadius: 20,
       borderWidth: 2,
-      borderColor: colors.border,
+      borderColor: colors.cardBorder,
       backgroundColor: colors.card,
-      padding: 20,
-      marginVertical: 8,
-      shadowColor: colors.foreground,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.1,
-      shadowRadius: 8,
-      elevation: 4,
+      padding: 24,
+      marginVertical: 12,
+      shadowColor: '#000000',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.25,
+      shadowRadius: 16,
+      elevation: 12,
+      minHeight: 80,
     };
 
     const variantStyles: Record<string, ViewStyle> = {

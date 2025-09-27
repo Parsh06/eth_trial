@@ -29,17 +29,18 @@ export const NeoButton: React.FC<NeoButtonProps> = ({
 }) => {
   const getButtonStyle = (): ViewStyle => {
     const baseStyle: ViewStyle = {
-      borderRadius: 12,
+      borderRadius: 16,
       borderWidth: 2,
       borderColor: colors.border,
       alignItems: 'center',
       justifyContent: 'center',
       opacity: disabled ? 0.5 : 1,
-      shadowColor: colors.foreground,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.1,
-      shadowRadius: 8,
-      elevation: 4,
+      shadowColor: '#000000',
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.3,
+      shadowRadius: 12,
+      elevation: 8,
+      minHeight: 48,
     };
 
     // Size styles
@@ -117,12 +118,12 @@ export const NeoButton: React.FC<NeoButtonProps> = ({
           activeOpacity={0.8}
           {...props}
         >
-          <LinearGradient
-            colors={gradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={[getButtonStyle(), { flex: 1 }]}
-          >
+        <LinearGradient
+          colors={gradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{ ...getButtonStyle(), flex: 1 }}
+        >
             <Text style={getTextStyle()}>{title}</Text>
           </LinearGradient>
         </TouchableOpacity>
