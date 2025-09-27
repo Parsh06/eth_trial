@@ -74,7 +74,7 @@ export const initializeAppKit = () => {
   }
 };
 
-// Initialize AppKit after app is fully loaded to prevent subscription conflicts
-setTimeout(() => {
-  initializeAppKit();
-}, 1000); 
+// Don't auto-initialize - let LazyWalletConnect handle it when needed
+// setTimeout(() => {
+//   initializeAppKit();
+// }, 1000); 

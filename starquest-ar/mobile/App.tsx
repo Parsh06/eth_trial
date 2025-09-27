@@ -1,17 +1,14 @@
-import './src/polyfills';
+import './src/polyfills-minimal';
 import React, { Suspense, lazy } from "react";
 import { View, Text, StyleSheet, StatusBar } from "react-native";
-import { WagmiProvider } from "wagmi";
-import { QueryClientProvider } from "@tanstack/react-query";
-import { wagmiConfig, queryClient } from "./src/config/wagmi";
 import { GameProvider, useGame } from "./src/context/GameContext";
 import { ErrorBoundary } from "./src/components/ErrorBoundary";
 import { Preloader } from "./src/components/Preloader";
 import { BottomNav } from "./src/components/layout/BottomNav";
 import { colors } from "./src/utils/colors";
 
-// Lazy load heavy components to reduce initial bundle size
-const AppKit = lazy(() => import("@reown/appkit-wagmi-react-native").then(module => ({ default: module.AppKit })));
+// Completely lazy load all crypto/wallet dependencies
+const WalletProvider = lazy(() => import("./src/components/WalletProvider"));
 const LandingScreen = lazy(() => import("./src/screens/LandingScreen").then(module => ({ default: module.LandingScreen })));
 const LoginScreen = lazy(() => import("./src/screens/LoginScreen").then(module => ({ default: module.LoginScreen })));
 const OnboardingScreen = lazy(() => import("./src/screens/OnboardingScreen").then(module => ({ default: module.OnboardingScreen })));
@@ -169,26 +166,37 @@ const AppContent: React.FC = () => {
           tabs={tabs}
         />
       )}
-      <Suspense fallback={null}>
-        <AppKit />
-      </Suspense>
     </View>
   );
 };
 
-// Main App component with providers
+// Main App component with conditional wallet providers
 const App: React.FC = () => {
   return (
     <ErrorBoundary>
-      <WagmiProvider config={wagmiConfig}>
-        <QueryClientProvider client={queryClient}>
       <GameProvider>
-        <AppContent />
+        <AppContentWrapper />
       </GameProvider>
-        </QueryClientProvider>
-      </WagmiProvider>
     </ErrorBoundary>
   );
+};
+
+// Wrapper to conditionally load wallet functionality
+const AppContentWrapper: React.FC = () => {
+  const { state } = useGame();
+  const needsWallet = state.screen === "wallet-connect" || state.screen === "main";
+
+  if (needsWallet) {
+    return (
+      <Suspense fallback={<LoadingFallback />}>
+        <WalletProvider walletEnabled={true}>
+          <AppContent />
+        </WalletProvider>
+      </Suspense>
+    );
+  }
+
+  return <AppContent />;
 };
 
 const styles = StyleSheet.create({

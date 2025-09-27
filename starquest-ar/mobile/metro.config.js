@@ -17,6 +17,12 @@ config.resolver.alias = {
   _stream_readable: 'readable-stream/readable',
   _stream_transform: 'readable-stream/transform',
   _stream_writable: 'readable-stream/writable',
+  // Fix @noble/hashes resolution issues
+  '@noble/hashes/crypto': '@noble/hashes/crypto.js',
+  '@noble/hashes': '@noble/hashes/index.js',
+  // Fix multiformats resolution issues
+  'multiformats/cjs/src/basics': 'multiformats/src/basics.js',
+  'multiformats': 'multiformats/index.js',
 };
 
 // Ensure these extensions are resolved
@@ -25,14 +31,8 @@ config.resolver.sourceExts = [...config.resolver.sourceExts, 'cjs'];
 // Handle node modules that might not be compatible with React Native
 config.resolver.unstable_enableSymlinks = false;
 
-// Optimize resolver performance
-config.resolver.resolveRequest = (context, moduleName, platform) => {
-  // Skip heavy node_modules scanning for common patterns
-  if (moduleName.includes('@noble/hashes') || moduleName.includes('multiformats')) {
-    return context.resolveRequest(context, moduleName, platform);
-  }
-  return context.resolveRequest(context, moduleName, platform);
-};
+// Skip problematic module resolution to speed up bundling
+config.resolver.resolveRequest = null;
 
 // Enhanced transformer with performance optimizations
 config.transformer = {
@@ -73,5 +73,12 @@ config.watchFolders = [];
 
 // Performance optimizations
 config.maxWorkers = Math.max(1, Math.floor(require('os').cpus().length * 0.8));
+
+// Exclude heavy modules from initial bundle
+config.resolver.blockList = [
+  /node_modules\/@noble\/hashes\/.*\.js$/,
+  /node_modules\/multiformats\/.*\.js$/,
+  /node_modules\/@walletconnect\/.*\/node_modules\/@noble\/.*\.js$/,
+];
 
 module.exports = config;
