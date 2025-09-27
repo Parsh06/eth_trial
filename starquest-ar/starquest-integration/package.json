@@ -1,0 +1,40 @@
+{
+  "name": "starquest-integration",
+  "version": "1.0.0",
+  "description": "Comprehensive JavaScript integration library for StarQuest AR treasure hunting game on Hedera",
+  "main": "lib/starquest-client.js",
+  "type": "module",
+  "scripts": {
+    "test": "node examples/basic-usage.js",
+    "example:basic": "node examples/basic-usage.js",
+    "example:gameplay": "node examples/gameplay-example.js",
+    "example:admin": "node examples/admin-example.js"
+  },
+  "keywords": [
+    "hedera",
+    "blockchain",
+    "ar",
+    "treasure-hunting",
+    "gaming",
+    "web3",
+    "hbar",
+    "smart-contracts"
+  ],
+  "author": "StarQuest Team",
+  "license": "MIT",
+  "dependencies": {
+    "ethers": "^6.15.0",
+    "dotenv": "^16.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/starquest-integration"
+  },
+  "bugs": {
+    "url": "https://github.com/your-org/starquest-integration/issues"
+  },
+  "homepage": "https://starquest.game"
+}
