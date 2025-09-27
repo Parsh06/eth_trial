@@ -6,25 +6,26 @@ if (typeof global.global === 'undefined') {
   global.global = global;
 }
 
-// Lazy load heavy polyfills to improve startup time
-const loadHeavyPolyfills = () => {
-  return Promise.all([
-    import('react-native-url-polyfill/auto'),
-    import('buffer').then(({ Buffer }) => {
-      if (typeof global.Buffer === 'undefined') {
-        global.Buffer = Buffer;
-      }
-    }),
-    import('process/browser').then((process) => {
-      if (typeof global.process === 'undefined') {
-        global.process = process.default;
-      }
-    }),
-    import('@walletconnect/react-native-compat')
-  ]);
+// Set up essential globals immediately for WalletConnect
+import { Buffer } from 'buffer';
+if (typeof global.Buffer === 'undefined') {
+  global.Buffer = Buffer;
+}
+
+import process from 'process/browser';
+if (typeof global.process === 'undefined') {
+  global.process = process;
+}
+
+// Load WalletConnect compatibility immediately to prevent subscription errors
+import '@walletconnect/react-native-compat';
+
+// Lazy load remaining polyfills
+const loadRemainingPolyfills = () => {
+  return import('react-native-url-polyfill/auto').catch(console.warn);
 };
 
-// Initialize heavy polyfills after app startup
+// Load remaining polyfills after startup
 setTimeout(() => {
-  loadHeavyPolyfills().catch(console.warn);
-}, 100); 
+  loadRemainingPolyfills();
+}, 50); 

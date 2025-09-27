@@ -51,15 +51,8 @@ config.transformer = {
   }),
 };
 
-// Enhanced caching
-config.cacheStores = [
-  {
-    name: 'FileStore',
-    options: {
-      cacheDirectory: require('path').join(__dirname, 'node_modules', '.cache', 'metro'),
-    },
-  },
-];
+// Enhanced caching - use default cache stores
+// config.cacheStores is handled by Expo automatically
 
 // Optimized file watching with reduced scope
 config.watcher = {

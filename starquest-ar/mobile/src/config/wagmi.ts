@@ -46,18 +46,35 @@ let appKitInitialized = false;
 
 export const initializeAppKit = () => {
   if (!appKitInitialized) {
-    createAppKit({
-      projectId,
-      metadata,
-      wagmiConfig,
-      defaultChain: mainnet, // Optional
-      enableAnalytics: false, // Disable analytics for better performance
-    });
-    appKitInitialized = true;
+    try {
+      createAppKit({
+        projectId,
+        metadata,
+        wagmiConfig,
+        defaultChain: mainnet,
+        enableAnalytics: false,
+        // Fix WalletConnect subscription errors
+        enableWalletConnect: true,
+        enableInjected: true,
+        enableEIP6963: false,
+        enableCoinbase: false,
+        themeMode: 'light',
+        // Reduce subscription conflicts
+        featuredWalletIds: [],
+        includeWalletIds: [],
+        excludeWalletIds: [],
+        // Disable problematic features
+        enableSwaps: false,
+        enableOnramp: false,
+      });
+      appKitInitialized = true;
+    } catch (error) {
+      console.warn('AppKit initialization error:', error);
+    }
   }
 };
 
-// Initialize AppKit after a short delay to improve startup time
+// Initialize AppKit after app is fully loaded to prevent subscription conflicts
 setTimeout(() => {
   initializeAppKit();
-}, 500); 
+}, 1000); 
