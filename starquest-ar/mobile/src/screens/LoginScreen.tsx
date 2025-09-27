@@ -28,9 +28,12 @@ import { WalletDetectionService, WalletConnectionOption } from '../services/Wall
 
 export const LoginScreen: React.FC = () => {
   const { handleWalletConnect, loading, error } = useGame();
-  const { open } = useAppKit();
-  const { address, isConnected } = useAccount();
-  const { signMessageAsync } = useSignMessage();
+  // const { open } = useAppKit();
+  // Temporarily disabled wagmi hooks for performance
+  // const { address, isConnected } = useAccount();
+  // const { signMessageAsync } = useSignMessage();
+  const address = null;
+  const isConnected = false;
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('');
   const [fadeAnim] = useState(new Animated.Value(0));
