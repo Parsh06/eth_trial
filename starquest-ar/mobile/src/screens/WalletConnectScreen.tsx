@@ -5,6 +5,7 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
+import { useWallet } from '../context/WalletContext';
 import { useGame } from '../context/GameContext';
 import { MobileLayout } from '../components/layout/MobileLayout';
 import { NeoButton } from '../components/ui/NeoButton';
@@ -13,19 +14,39 @@ import { colors } from '../utils/colors';
 import { typography } from '../utils/typography';
 
 export const WalletConnectScreen: React.FC = () => {
-  const [isConnecting, setIsConnecting] = useState(false);
   const { handleWalletConnect } = useGame();
+  const { walletState, isLoading, connect } = useWallet();
 
   const handleConnectWallet = async () => {
-    setIsConnecting(true);
-    
-    // Simulate wallet connection
-    setTimeout(() => {
-      const mockAddress = '0x1234...5678';
-      handleWalletConnect(mockAddress);
-      setIsConnecting(false);
-    }, 2000);
+    try {
+      const success = await connect();
+      if (success && walletState.address) {
+        // Connection successful, trigger game context update
+        handleWalletConnect(walletState.address);
+      } else {
+        Alert.alert(
+          'Connection Failed',
+          walletState.error || 'Failed to connect wallet. Please try again.',
+          [{ text: 'OK' }]
+        );
+      }
+    } catch (error: any) {
+      console.error('❌ Wallet connection error:', error);
+      Alert.alert(
+        'Connection Error',
+        'An unexpected error occurred. Please try again.',
+        [{ text: 'OK' }]
+      );
+    }
   };
+
+  // Handle successful connection
+  React.useEffect(() => {
+    if (walletState.isConnected && walletState.address) {
+      console.log('✅ Wallet connected:', walletState.address);
+      handleWalletConnect(walletState.address);
+    }
+  }, [walletState.isConnected, walletState.address, handleWalletConnect]);
 
   const handleGuestMode = () => {
     Alert.alert(
@@ -70,7 +91,7 @@ export const WalletConnectScreen: React.FC = () => {
               onPress={handleConnectWallet}
               variant="electric"
               size="lg"
-              loading={isConnecting}
+              loading={isLoading}
               style={styles.connectButton}
             />
 
@@ -83,14 +104,14 @@ export const WalletConnectScreen: React.FC = () => {
             />
           </View>
 
-          {/* Supported Wallets */}
+          {/* MetaMask Info */}
           <NeoCard style={styles.supportedCard}>
-            <Text style={styles.supportedTitle}>Supported Wallets</Text>
+            <Text style={styles.supportedTitle}>About MetaMask</Text>
             <View style={styles.walletList}>
-              <Text style={styles.walletItem}>• MetaMask</Text>
-              <Text style={styles.walletItem}>• WalletConnect</Text>
-              <Text style={styles.walletItem}>• Coinbase Wallet</Text>
-              <Text style={styles.walletItem}>• Trust Wallet</Text>
+              <Text style={styles.walletItem}>🦊 The most trusted Web3 wallet</Text>
+              <Text style={styles.walletItem}>🔒 Your keys, your crypto</Text>
+              <Text style={styles.walletItem}>🚀 Over 30 million users worldwide</Text>
+              <Text style={styles.walletItem}>💫 Direct connection - no intermediaries</Text>
             </View>
           </NeoCard>
         </View>

@@ -6,8 +6,10 @@ import {
   ScrollView,
   Dimensions,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useWallet } from '../context/WalletContext';
 import { useGame } from '../context/GameContext';
 import { MobileLayout } from '../components/layout/MobileLayout';
 import { NeoButton } from '../components/ui/NeoButton';
@@ -20,11 +22,17 @@ const { width } = Dimensions.get('window');
 
 export const HomeScreen: React.FC = () => {
   const { user, stars, quests, handleTabChange, handleChallengeSelect } = useGame();
+  const { walletState, formatAddress, getNetworkName } = useWallet();
+  
+  // Destructure wallet state
+  const { isConnected, address, balance, chainId } = walletState;
 
   const completedStars = stars.filter((star) => star.status === 'completed').length;
   const totalStars = stars.length;
   const completedQuests = quests.filter((quest) => quest.completed).length;
   const totalQuests = quests.length;
+
+  console.log('🏠 HomeScreen: Wallet data', { isConnected, hasBalance: !!balance, chainId });
 
   const quickActions = [
     {
@@ -82,13 +90,35 @@ export const HomeScreen: React.FC = () => {
         >
           <View style={styles.heroContent}>
             <Text style={styles.heroTitle}>Welcome back!</Text>
-            <Text style={styles.heroSubtitle}>{user?.username || 'StarHunter'}</Text>
+            <Text style={styles.heroSubtitle}>
+              {user?.username || 'StarHunter'}
+            </Text>
             <Text style={styles.heroDescription}>
               Ready for your next cosmic adventure?
             </Text>
-            {user?.walletAddress && (
-              <Text style={styles.walletAddress}>
-                {user.walletAddress.slice(0, 6)}...{user.walletAddress.slice(-4)}
+            
+            {/* Wallet Information */}
+            {isConnected && (
+              <View style={styles.walletInfo}>
+                <Text style={styles.walletAddress}>
+                  {formatAddress(address)}
+                </Text>
+                {balance && (
+                  <Text style={styles.walletBalance}>
+                    {balance} ETH
+                  </Text>
+                )}
+                {chainId && (
+                  <Text style={styles.networkInfo}>
+                    🔗 Connected to {getNetworkName(chainId)}
+                  </Text>
+                )}
+              </View>
+            )}
+            
+            {!isConnected && (
+              <Text style={styles.disconnectedText}>
+                ⚠️ Wallet not connected
               </Text>
             )}
           </View>
@@ -280,13 +310,41 @@ const styles = StyleSheet.create({
     opacity: 0.9,
     lineHeight: 24,
   },
+  walletInfo: {
+    alignItems: 'center',
+    marginTop: 16,
+    gap: 8,
+  },
   walletAddress: {
     ...typography.caption,
     color: '#FFFFFF',
     textAlign: 'center',
-    opacity: 0.8,
-    marginTop: 12,
+    opacity: 0.9,
     fontFamily: 'monospace',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  walletBalance: {
+    ...typography.bodySmall,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    fontWeight: '600',
+    opacity: 0.95,
+  },
+  networkInfo: {
+    ...typography.caption,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    opacity: 0.8,
+  },
+  disconnectedText: {
+    ...typography.caption,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    opacity: 0.7,
+    marginTop: 12,
     backgroundColor: 'rgba(255,255,255,0.1)',
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -349,88 +407,89 @@ const styles = StyleSheet.create({
     opacity: 0.9,
     lineHeight: 20,
   },
-  progressCard: { padding: 24 },
-  progressItem: { marginBottom: 20 },
+  progressCard: {
+    padding: 24,
+    gap: 20,
+  },
+  progressItem: { gap: 12 },
   progressLabel: {
     ...typography.bodySmall,
-    color: colors.mutedForeground,
-    marginBottom: 8,
+    color: colors.foreground,
     fontWeight: '600',
   },
   progressText: {
     ...typography.caption,
     color: colors.mutedForeground,
-    marginTop: 8,
     textAlign: 'center',
   },
-  challengeCard: { padding: 24 },
-  challengeHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
-  challengeIcon: { fontSize: 32, marginRight: 16 },
-  challengeContent: { flex: 1 },
+  challengeCard: { padding: 24, gap: 20 },
+  challengeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  challengeIcon: { fontSize: 48, textAlign: 'center' },
+  challengeContent: { flex: 1, gap: 8 },
   challengeTitle: {
     ...typography.heading3,
     color: colors.foreground,
-    marginBottom: 4,
   },
   challengeDescription: {
-    ...typography.body,
+    ...typography.bodySmall,
     color: colors.mutedForeground,
-    lineHeight: 22,
+    lineHeight: 20,
   },
-  challengeButton: { width: '100%' },
+  challengeButton: { marginTop: 4 },
   achievementsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    gap: 16,
+    gap: 12,
   },
   achievementCard: {
-    width: (width - 72) / 2,
-    padding: 20,
+    width: (width - 64) / 2,
     alignItems: 'center',
+    padding: 16,
     minHeight: 100,
-    marginBottom: 16,
+    justifyContent: 'center',
   },
-  achievementIcon: { fontSize: 32, marginBottom: 12, textAlign: 'center' },
+  achievementIcon: { fontSize: 32, marginBottom: 8, textAlign: 'center' },
   achievementTitle: {
-    ...typography.bodySmall,
+    ...typography.caption,
     color: colors.foreground,
     textAlign: 'center',
     fontWeight: '600',
-    lineHeight: 18,
   },
   activityItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 20,
-    marginBottom: 16,
+    padding: 16,
+    marginBottom: 12,
+    gap: 16,
   },
-  activityIcon: { fontSize: 28, marginRight: 16 },
-  activityContent: { flex: 1 },
+  activityIcon: { fontSize: 24, textAlign: 'center', width: 30 },
+  activityContent: { flex: 1, gap: 4 },
   activityTitle: {
-    ...typography.body,
+    ...typography.bodySmall,
     color: colors.foreground,
-    marginBottom: 4,
-    fontWeight: '500',
+    fontWeight: '600',
   },
-  activityTime: { ...typography.caption, color: colors.mutedForeground },
-  featuredCard: {
-    padding: 24,
-    backgroundColor: colors.card,
-    borderWidth: 2,
-    borderColor: colors.electricPurple,
+  activityTime: {
+    ...typography.caption,
+    color: colors.mutedForeground,
   },
+  featuredCard: { padding: 24, gap: 16, alignItems: 'center' },
   featuredTitle: {
     ...typography.heading3,
     color: colors.foreground,
-    marginBottom: 8,
+    textAlign: 'center',
   },
   featuredDescription: {
     ...typography.body,
     color: colors.mutedForeground,
-    marginBottom: 20,
+    textAlign: 'center',
     lineHeight: 22,
   },
-  featuredButton: { width: '100%' },
-  bottomSpacing: { height: 100 },
+  featuredButton: { marginTop: 8 },
+  bottomSpacing: { height: 40 },
 });

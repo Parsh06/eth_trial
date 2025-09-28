@@ -10,7 +10,9 @@
     "moduleResolution": "node",
     "allowJs": true,
     "noEmit": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "target": "es2019",
+    "lib": ["es2019"]
   },
   "include": [
     "**/*.ts",

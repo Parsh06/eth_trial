@@ -4,81 +4,59 @@ async function main() {
   console.log("🚀 Deploying StarQuest contracts...");
 
   // Get the contract factories
-  const StarQuestToken = await ethers.getContractFactory("StarQuestToken");
   const StarQuest = await ethers.getContractFactory("StarQuest");
-
-  // Deploy StarQuest Token first
-  console.log("📦 Deploying StarQuest Token...");
-  const starQuestToken = await StarQuestToken.deploy();
-  await starQuestToken.waitForDeployment();
-  const tokenAddress = await starQuestToken.getAddress();
-  console.log(`✅ StarQuest Token deployed to: ${tokenAddress}`);
+  const StarQuestOracle = await ethers.getContractFactory("StarQuestOracle");
+  const StarQuestHTS = await ethers.getContractFactory("StarQuestHTS");
+  const StarQuestConsensusService = await ethers.getContractFactory("StarQuestConsensusService");
+  const StarQuestFilecoinStorage = await ethers.getContractFactory("StarQuestFilecoinStorage");
 
   // Deploy main StarQuest contract
-  console.log("⭐ Deploying StarQuest contract...");
-  const starQuest = await StarQuest.deploy(tokenAddress);
-  await starQuest.waitForDeployment();
-  const contractAddress = await starQuest.getAddress();
-  console.log(`✅ StarQuest contract deployed to: ${contractAddress}`);
+  console.log("⭐ Deploying StarQuest Core contract...");
+  const [deployer] = await ethers.getSigners();
+  const storageWallet = deployer.address; // Use deployer as storage wallet for local testing
+  const starQuest = await StarQuest.deploy(storageWallet);
+  await starQuest.deployed();
+  const starQuestAddress = starQuest.address;
+  console.log(`✅ StarQuest Core deployed to: ${starQuestAddress}`);
 
-  // Mint initial tokens to the contract
-  console.log("💰 Minting initial tokens...");
-  const mintAmount = ethers.parseEther("1000000"); // 1M tokens
-  await starQuestToken.mint(contractAddress, mintAmount);
-  console.log(`✅ Minted ${ethers.formatEther(mintAmount)} tokens to contract`);
+  // Deploy Oracle contract
+  console.log("🔮 Deploying StarQuest Oracle contract...");
+  const oracle = await StarQuestOracle.deploy();
+  await oracle.deployed();
+  const oracleAddress = oracle.address;
+  console.log(`✅ StarQuest Oracle deployed to: ${oracleAddress}`);
 
-  // Create some initial stars
-  console.log("🌟 Creating initial stars...");
-  
-  const stars = [
-    {
-      name: "Cosmic Dawn",
-      description: "A brilliant star that marks the beginning of your journey",
-      rarity: 1,
-      starType: 1,
-      experienceReward: 100,
-      tokenReward: ethers.parseEther("10"),
-      metadataURI: "https://api.starquest.com/metadata/stars/1"
-    },
-    {
-      name: "Elemental Fire",
-      description: "A star burning with the power of fire",
-      rarity: 2,
-      starType: 2,
-      experienceReward: 200,
-      tokenReward: ethers.parseEther("25"),
-      metadataURI: "https://api.starquest.com/metadata/stars/2"
-    },
-    {
-      name: "Mystical Crystal",
-      description: "A rare crystal star with mysterious properties",
-      rarity: 3,
-      starType: 5,
-      experienceReward: 500,
-      tokenReward: ethers.parseEther("100"),
-      metadataURI: "https://api.starquest.com/metadata/stars/3"
-    }
-  ];
+  // Deploy HTS contract
+  console.log("🪙 Deploying StarQuest HTS contract...");
+  const hts = await StarQuestHTS.deploy();
+  await hts.deployed();
+  const htsAddress = hts.address;
+  console.log(`✅ StarQuest HTS deployed to: ${htsAddress}`);
 
-  for (const star of stars) {
-    const tx = await starQuest.createStar(
-      star.name,
-      star.description,
-      star.rarity,
-      star.starType,
-      star.experienceReward,
-      star.tokenReward,
-      star.metadataURI
-    );
-    await tx.wait();
-    console.log(`✅ Created star: ${star.name}`);
-  }
+  // Deploy Consensus contract
+  console.log("🤝 Deploying StarQuest Consensus Service contract...");
+  const topicId = "0.0.123456"; // Example Hedera topic ID for local testing
+  const consensus = await StarQuestConsensusService.deploy(topicId);
+  await consensus.deployed();
+  const consensusAddress = consensus.address;
+  console.log(`✅ StarQuest Consensus Service deployed to: ${consensusAddress}`);
+
+  // Deploy Filecoin contract
+  console.log("💾 Deploying StarQuest Filecoin Storage contract...");
+  const usdfcAddress = "0x0000000000000000000000000000000000000000"; // Dummy address for local testing
+  const filecoin = await StarQuestFilecoinStorage.deploy(usdfcAddress);
+  await filecoin.deployed();
+  const filecoinAddress = filecoin.address;
+  console.log(`✅ StarQuest Filecoin Storage deployed to: ${filecoinAddress}`);
 
   // Display deployment summary
-  console.log("\n🎉 Deployment Summary:");
-  console.log("========================");
-  console.log(`StarQuest Token: ${tokenAddress}`);
-  console.log(`StarQuest Contract: ${contractAddress}`);
+  console.log("\n🎉 Local Deployment Summary:");
+  console.log("=============================");
+  console.log(`StarQuest Core: ${starQuestAddress}`);
+  console.log(`Oracle: ${oracleAddress}`);
+  console.log(`HTS: ${htsAddress}`);
+  console.log(`Consensus: ${consensusAddress}`);
+  console.log(`Filecoin: ${filecoinAddress}`);
   console.log(`Network: ${await ethers.provider.getNetwork().then(n => n.name)}`);
   console.log(`Chain ID: ${await ethers.provider.getNetwork().then(n => n.chainId)}`);
   
@@ -86,8 +64,13 @@ async function main() {
   const deploymentInfo = {
     network: await ethers.provider.getNetwork().then(n => n.name),
     chainId: await ethers.provider.getNetwork().then(n => n.chainId),
-    tokenAddress,
-    contractAddress,
+    contracts: {
+      StarQuest: starQuestAddress,
+      Oracle: oracleAddress,
+      HTS: htsAddress,
+      Consensus: consensusAddress,
+      Filecoin: filecoinAddress
+    },
     deployer: await ethers.provider.getSigner().getAddress(),
     timestamp: new Date().toISOString()
   };
@@ -100,9 +83,9 @@ async function main() {
   
   console.log("\n📄 Deployment info saved to deployment.json");
   console.log("\n🔗 Next steps:");
-  console.log("1. Update your frontend with the contract addresses");
-  console.log("2. Verify contracts on block explorer (optional)");
-  console.log("3. Start testing the application!");
+  console.log("1. Update your mobile app with the contract addresses");
+  console.log("2. Start the backend API");
+  console.log("3. Start the mobile app and test!");
 }
 
 main()

@@ -4,212 +4,99 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
   Alert,
+  TouchableOpacity,
 } from 'react-native';
-import { useGame } from '../context/GameContext';
 import { MobileLayout } from '../components/layout/MobileLayout';
-import { NeoButton } from '../components/ui/NeoButton';
 import { NeoCard } from '../components/ui/NeoCard';
-import { ProgressBar } from '../components/ui/ProgressBar';
+import { NeoButton } from '../components/ui/NeoButton';
 import { colors } from '../utils/colors';
 import { typography } from '../utils/typography';
 
 export const ProfileScreen: React.FC = () => {
-  const { user, handleDisconnectWallet } = useGame();
+  console.log('🏠 ProfileScreen: Rendering simple version');
 
-  const handleDisconnect = () => {
-    Alert.alert(
-      'Disconnect Wallet',
-      'Are you sure you want to disconnect your wallet? You can reconnect anytime.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Disconnect', 
-          style: 'destructive',
-          onPress: handleDisconnectWallet 
-        },
-      ]
-    );
+  const handleWalletAction = () => {
+    Alert.alert('Wallet Action', 'This feature is coming soon!');
   };
 
   const handleExportData = () => {
-    Alert.alert(
-      'Export Data',
-      'Your game data will be exported as a JSON file.',
-      [{ text: 'OK' }]
-    );
+    Alert.alert('Export Data', 'This feature is coming soon!');
   };
-
-  const handleDeleteAccount = () => {
-    Alert.alert(
-      'Delete Account',
-      'This will permanently delete your account and all associated data. This action cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Delete', 
-          style: 'destructive',
-          onPress: () => {
-            Alert.alert('Account Deleted', 'Your account has been deleted.');
-          }
-        },
-      ]
-    );
-  };
-
-  const settingsOptions = [
-    {
-      title: 'Notifications',
-      description: 'Manage notification preferences',
-      icon: '🔔',
-      onPress: () => Alert.alert('Notifications', 'Notification settings coming soon!'),
-    },
-    {
-      title: 'AR Preferences',
-      description: 'Configure AR camera settings',
-      icon: '📱',
-      onPress: () => Alert.alert('AR Settings', 'AR preferences coming soon!'),
-    },
-    {
-      title: 'Privacy',
-      description: 'Control your privacy settings',
-      icon: '🔒',
-      onPress: () => Alert.alert('Privacy', 'Privacy settings coming soon!'),
-    },
-    {
-      title: 'Support',
-      description: 'Get help and contact support',
-      icon: '❓',
-      onPress: () => Alert.alert('Support', 'Contact support at help@starquest.com'),
-    },
-  ];
 
   return (
     <MobileLayout>
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        {/* Profile Header */}
+        {/* Header */}
         <View style={styles.header}>
           <View style={styles.avatarContainer}>
             <Text style={styles.avatar}>👤</Text>
           </View>
-          <Text style={styles.username}>{user?.username || 'Star Hunter'}</Text>
-          <Text style={styles.walletAddress}>
-            {user?.walletAddress || 'Guest User'}
-          </Text>
+          <Text style={styles.username}>StarQuest User</Text>
+          <Text style={styles.subtitle}>Cosmic Explorer</Text>
         </View>
 
-        {/* Stats Overview */}
+        {/* Stats Card */}
         <NeoCard style={styles.statsCard}>
           <Text style={styles.sectionTitle}>Your Statistics</Text>
-          
           <View style={styles.statsGrid}>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{user?.stats.starsFound || 0}</Text>
+              <Text style={styles.statNumber}>5</Text>
               <Text style={styles.statLabel}>Stars Found</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{user?.stats.questsCompleted || 0}</Text>
+              <Text style={styles.statNumber}>3</Text>
               <Text style={styles.statLabel}>Quests Completed</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{user?.stats.nftsEarned || 0}</Text>
+              <Text style={styles.statNumber}>2</Text>
               <Text style={styles.statLabel}>NFTs Earned</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{user?.stats.streak || 0}</Text>
+              <Text style={styles.statNumber}>7</Text>
               <Text style={styles.statLabel}>Current Streak</Text>
             </View>
           </View>
         </NeoCard>
 
-        {/* Progress Section */}
-        <NeoCard style={styles.progressCard}>
-          <Text style={styles.sectionTitle}>Progress Overview</Text>
-          
-          <View style={styles.progressItem}>
-            <Text style={styles.progressLabel}>Star Collection</Text>
-            <ProgressBar
-              progress={user?.stats.starsFound || 0}
-              maxProgress={12}
-              color={colors.electricPurple}
-            />
+        {/* Wallet Info Card */}
+        <NeoCard style={styles.walletCard}>
+          <Text style={styles.sectionTitle}>Wallet Information</Text>
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>Status:</Text>
+            <View style={styles.statusContainer}>
+              <View style={styles.statusDot} />
+              <Text style={styles.infoValue}>Connected</Text>
+            </View>
           </View>
-
-          <View style={styles.progressItem}>
-            <Text style={styles.progressLabel}>Quest Mastery</Text>
-            <ProgressBar
-              progress={user?.stats.questsCompleted || 0}
-              maxProgress={20}
-              color={colors.electricGreen}
-            />
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>Network:</Text>
+            <Text style={styles.infoValue}>Ethereum Mainnet</Text>
           </View>
-
-          <View style={styles.progressItem}>
-            <Text style={styles.progressLabel}>NFT Collection</Text>
-            <ProgressBar
-              progress={user?.stats.nftsEarned || 0}
-              maxProgress={50}
-              color={colors.electricOrange}
-            />
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>Address:</Text>
+            <Text style={styles.infoValue} numberOfLines={1}>
+              0x1234...5678
+            </Text>
           </View>
         </NeoCard>
 
-        {/* Achievements */}
-        <NeoCard style={styles.achievementsCard}>
-          <Text style={styles.sectionTitle}>Achievements</Text>
-          <View style={styles.achievementsList}>
-            {user?.achievements.map((achievement, index) => (
-              <View key={index} style={styles.achievementItem}>
-                <Text style={styles.achievementIcon}>🏆</Text>
-                <Text style={styles.achievementText}>{achievement}</Text>
-              </View>
-            ))}
-          </View>
-        </NeoCard>
-
-        {/* Settings */}
-        <Text style={styles.sectionTitle}>Settings</Text>
-        <View style={styles.settingsList}>
-          {settingsOptions.map((option, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.settingItem}
-              onPress={option.onPress}
-            >
-              <Text style={styles.settingIcon}>{option.icon}</Text>
-              <View style={styles.settingContent}>
-                <Text style={styles.settingTitle}>{option.title}</Text>
-                <Text style={styles.settingDescription}>{option.description}</Text>
-              </View>
-              <Text style={styles.settingArrow}>›</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Account Actions */}
+        {/* Actions */}
         <NeoCard style={styles.actionsCard}>
           <Text style={styles.sectionTitle}>Account Actions</Text>
           
           <NeoButton
-            title="Export My Data"
+            title="Wallet Settings"
+            onPress={handleWalletAction}
+            variant="outline"
+            style={styles.actionButton}
+          />
+          
+          <NeoButton
+            title="Export Game Data"
             onPress={handleExportData}
             variant="outline"
             style={styles.actionButton}
-          />
-          
-          <NeoButton
-            title="Disconnect Wallet"
-            onPress={handleDisconnect}
-            variant="outline"
-            style={styles.actionButton}
-          />
-          
-          <NeoButton
-            title="Delete Account"
-            onPress={handleDeleteAccount}
-            variant="outline"
-            style={[styles.actionButton, styles.dangerButton]}
           />
         </NeoCard>
 
@@ -245,23 +132,21 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 3,
     borderColor: colors.foreground,
-    shadowColor: colors.foreground,
-    shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 4,
   },
   avatar: {
     fontSize: 40,
+    color: colors.foreground,
   },
   username: {
     ...typography.brutalLarge,
     color: colors.foreground,
     marginBottom: 8,
+    textAlign: 'center',
   },
-  walletAddress: {
+  subtitle: {
     ...typography.body,
     color: colors.mutedForeground,
+    textAlign: 'center',
   },
   statsCard: {
     marginBottom: 24,
@@ -296,84 +181,45 @@ const styles = StyleSheet.create({
     color: colors.mutedForeground,
     textAlign: 'center',
   },
-  progressCard: {
+  walletCard: {
     marginBottom: 24,
   },
-  progressItem: {
-    marginBottom: 16,
+  infoItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
   },
-  progressLabel: {
+  infoLabel: {
     ...typography.body,
-    color: colors.foreground,
-    marginBottom: 8,
+    color: colors.mutedForeground,
     fontWeight: '600',
   },
-  achievementsCard: {
-    marginBottom: 24,
-  },
-  achievementsList: {
-    gap: 12,
-  },
-  achievementItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    backgroundColor: colors.muted,
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: colors.foreground,
-  },
-  achievementIcon: {
-    fontSize: 20,
-    marginRight: 12,
-  },
-  achievementText: {
+  infoValue: {
     ...typography.body,
     color: colors.foreground,
-    fontWeight: '600',
-  },
-  settingsList: {
-    marginBottom: 24,
-  },
-  settingItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: colors.background,
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: colors.foreground,
-    marginBottom: 8,
-  },
-  settingIcon: {
-    fontSize: 20,
-    marginRight: 16,
-  },
-  settingContent: {
     flex: 1,
+    textAlign: 'right',
+    marginLeft: 16,
   },
-  settingTitle: {
-    ...typography.body,
-    color: colors.foreground,
-    marginBottom: 4,
-    fontWeight: '600',
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'flex-end',
   },
-  settingDescription: {
-    ...typography.caption,
-    color: colors.mutedForeground,
-  },
-  settingArrow: {
-    fontSize: 20,
-    color: colors.mutedForeground,
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.electricGreen,
+    marginRight: 6,
   },
   actionsCard: {
     marginBottom: 24,
   },
   actionButton: {
     marginBottom: 12,
-  },
-  dangerButton: {
-    borderColor: colors.error,
   },
   infoCard: {
     alignItems: 'center',
@@ -393,5 +239,6 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.mutedForeground,
     textAlign: 'center',
+    lineHeight: 20,
   },
 });

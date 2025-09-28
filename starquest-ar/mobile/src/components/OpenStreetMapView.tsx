@@ -13,6 +13,8 @@ import * as Location from 'expo-location';
 import { colors } from '../utils/colors';
 import { typography } from '../utils/typography';
 import { NeoButton } from './ui/NeoButton';
+import { QuestionModal } from './QuestionModal';
+import starsDatabase from '../data/stars-database.json';
 
 const { width, height } = Dimensions.get('window');
 
@@ -24,6 +26,7 @@ interface OpenStreetMapViewProps {
     name: string;
     position: { latitude: number; longitude: number };
     status: 'available' | 'completed' | 'locked';
+    type?: 'star' | 'game' | 'fixed';
   }>;
 }
 
@@ -36,11 +39,60 @@ export const OpenStreetMapView: React.FC<OpenStreetMapViewProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [mapReady, setMapReady] = useState(false);
+  const [questionModalVisible, setQuestionModalVisible] = useState(false);
+  const [currentStarQuestion, setCurrentStarQuestion] = useState<any>(null);
   const webViewRef = useRef<WebView>(null);
 
   useEffect(() => {
     getCurrentLocation();
   }, []);
+
+  const getRandomStarQuestion = () => {
+    // Generate random number from 1 to 12
+    const randomId = Math.floor(Math.random() * 12) + 1;
+    console.log('🎲 Generated random star ID:', randomId);
+    
+    // Find the star with matching ID in the database
+    const starQuestion = starsDatabase.stars.find(star => star.id === randomId);
+    
+    if (starQuestion) {
+      console.log('⭐ Found star question:', starQuestion.name, '-', starQuestion.question);
+      return starQuestion;
+    } else {
+      console.log('❌ No star found with ID:', randomId);
+      return null;
+    }
+  };
+
+  const handleStartChallenge = (starData: any) => {
+    console.log('🎯 Starting challenge for star:', starData.starId);
+    
+    const starQuestion = getRandomStarQuestion();
+    if (starQuestion) {
+      setCurrentStarQuestion(starQuestion);
+      setQuestionModalVisible(true);
+    } else {
+      Alert.alert('Error', 'Unable to load challenge question. Please try again.');
+    }
+  };
+
+  const handleAnswerSubmit = (isCorrect: boolean, starQuestion: any) => {
+    console.log('📝 Answer submitted:', isCorrect ? 'Correct' : 'Incorrect', 'for star:', starQuestion.name);
+    
+    if (isCorrect) {
+      console.log('🎉 Player earned:', starQuestion.reward.points, 'points');
+      // Here you could add logic to save progress, update user stats, etc.
+    }
+    
+    // Close the modal
+    setQuestionModalVisible(false);
+    setCurrentStarQuestion(null);
+  };
+
+  const handleCloseModal = () => {
+    setQuestionModalVisible(false);
+    setCurrentStarQuestion(null);
+  };
 
   const getCurrentLocation = async () => {
     try {
@@ -123,6 +175,7 @@ export const OpenStreetMapView: React.FC<OpenStreetMapViewProps> = ({
       ...star,
       lat: star.position.latitude,
       lng: star.position.longitude,
+      type: star.type || 'star',
     }))) : '[]';
     
     console.log('⭐ Stars data for map:', starsData);
@@ -166,6 +219,15 @@ export const OpenStreetMapView: React.FC<OpenStreetMapViewProps> = ({
             .star-available { background: #10B981; }
             .star-completed { background: #F59E0B; }
             .star-locked { background: #6B7280; }
+            .star-fixed { 
+                background: linear-gradient(45deg, #8B5CF6, #EC4899);
+                box-shadow: 0 0 20px rgba(139, 92, 246, 0.6);
+                animation: glow 2s infinite alternate;
+            }
+            @keyframes glow {
+                0% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.6); }
+                100% { box-shadow: 0 0 30px rgba(139, 92, 246, 0.9), 0 0 40px rgba(236, 72, 153, 0.6); }
+            }
             @keyframes pulse {
                 0% { transform: scale(1); opacity: 1; }
                 50% { transform: scale(1.1); opacity: 0.7; }
@@ -181,7 +243,7 @@ export const OpenStreetMapView: React.FC<OpenStreetMapViewProps> = ({
                 line-height: 1.4;
             }
             .leaflet-popup-tip {
-                background: #1F2937;
+           background: #1F2937;
             }
         </style>
     </head>
@@ -218,27 +280,59 @@ export const OpenStreetMapView: React.FC<OpenStreetMapViewProps> = ({
             const starsData = ${starsData};
             console.log('⭐ WebView: Processing stars data:', starsData.length, 'stars');
             starsData.forEach((star, index) => {
-                console.log(\`⭐ WebView: Adding star \${index + 1}:\`, star.name, 'at', star.lat, star.lng);
+                console.log(\`⭐ WebView: Adding star \${index + 1}:\`, star.name, 'at', star.lat, star.lng, 'type:', star.type);
+                
+                // Determine marker class and icon based on type
+                let markerClass = \`star-\${star.status}\`;
+                let markerIcon = star.status === 'available' ? '⭐' : 
+                               star.status === 'completed' ? '✅' : '🔒';
+                
+                if (star.type === 'fixed') {
+                    markerClass = 'star-fixed';
+                    markerIcon = '🌟'; // Special icon for fixed star spot
+                } else if (star.type === 'game') {
+                    markerIcon = '🎮'; // Game controller for game locations
+                }
+                
                 const starIcon = L.divIcon({
                     className: 'custom-div-icon',
-                    html: \`<div class="star-marker star-\${star.status}">
-                        \${star.status === 'available' ? '⭐' : 
-                          star.status === 'completed' ? '✅' : '🔒'}
+                    html: \`<div class="star-marker \${markerClass}">
+                        \${markerIcon}
                     </div>\`,
-                    iconSize: [30, 30],
-                    iconAnchor: [15, 15]
+                    iconSize: star.type === 'fixed' ? [35, 35] : [30, 30],
+                    iconAnchor: star.type === 'fixed' ? [17.5, 17.5] : [15, 15]
                 });
 
                 const starMarker = L.marker([star.lat, star.lng], { 
                     icon: starIcon 
                 }).addTo(map);
 
-                starMarker.bindPopup(\`
-                    <b>\${star.name}</b><br/>
-                    Status: \${star.status.toUpperCase()}<br/>
-                    \${star.status === 'available' ? 'Tap to collect!' : 
-                      star.status === 'completed' ? 'Already collected' : 'Unlock first'}
-                \`);
+                // Enhanced popup content based on type
+                let popupContent = \`<b>\${star.name}</b><br/>\`;
+                
+                if (star.type === 'fixed') {
+                    popupContent += \`
+                        <span style="color: #8B5CF6;">🌟 Special Star Quest Hub</span><br/>
+                        <span style="color: #10B981;">📍 Fixed Location</span><br/>
+                        <span style="color: #F59E0B;">🎮 Game Available!</span><br/>
+                        <small>Coordinates: \${star.lat.toFixed(6)}, \${star.lng.toFixed(6)}</small>
+                    \`;
+                } else if (star.type === 'game') {
+                    popupContent += \`
+                        <span style="color: #EC4899;">🎮 Game Challenge</span><br/>
+                        Status: \${star.status.toUpperCase()}<br/>
+                        \${star.status === 'available' ? 'Get within 1.5m to play!' : 
+                          star.status === 'completed' ? 'Already played' : 'Unlock first'}
+                    \`;
+                } else {
+                    popupContent += \`
+                        Status: \${star.status.toUpperCase()}<br/>
+                        \${star.status === 'available' ? 'Tap to collect!' : 
+                          star.status === 'completed' ? 'Already collected' : 'Unlock first'}
+                    \`;
+                }
+                
+                starMarker.bindPopup(popupContent);
 
                 // Send star click to React Native
                 starMarker.on('click', () => {
@@ -307,8 +401,7 @@ export const OpenStreetMapView: React.FC<OpenStreetMapViewProps> = ({
             [
               { text: 'Cancel', style: 'cancel' },
               { text: 'Start Challenge', onPress: () => {
-                // Handle star challenge start
-                console.log('🎯 Starting challenge for star:', data.starId);
+                handleStartChallenge(data);
               }},
             ]
           );
@@ -361,7 +454,7 @@ export const OpenStreetMapView: React.FC<OpenStreetMapViewProps> = ({
         <NeoButton
           title="Try Again"
           onPress={getCurrentLocation}
-          variant="primary"
+          variant="default"
           size="medium"
           style={styles.retryButton}
         />
@@ -422,6 +515,14 @@ export const OpenStreetMapView: React.FC<OpenStreetMapViewProps> = ({
           📍 {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
         </Text>
       </View>
+
+      {/* Question Modal */}
+      <QuestionModal
+        visible={questionModalVisible}
+        onClose={handleCloseModal}
+        starQuestion={currentStarQuestion}
+        onAnswerSubmit={handleAnswerSubmit}
+      />
     </View>
   );
 };
