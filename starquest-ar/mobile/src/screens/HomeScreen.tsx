@@ -98,7 +98,7 @@ export const HomeScreen: React.FC = () => {
             </Text>
             
             {/* Wallet Information */}
-            {isConnected && address && (
+            {isConnected && (
               <View style={styles.walletInfo}>
                 <Text style={styles.walletAddress}>
                   {formatAddress(address)}
@@ -339,9 +339,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     opacity: 0.8,
   },
-  balanceLoader: {
-    marginVertical: 4,
-  },
   disconnectedText: {
     ...typography.caption,
     color: '#FFFFFF',
@@ -410,88 +407,89 @@ const styles = StyleSheet.create({
     opacity: 0.9,
     lineHeight: 20,
   },
-  progressCard: { padding: 24 },
-  progressItem: { marginBottom: 20 },
+  progressCard: {
+    padding: 24,
+    gap: 20,
+  },
+  progressItem: { gap: 12 },
   progressLabel: {
     ...typography.bodySmall,
-    color: colors.mutedForeground,
-    marginBottom: 8,
+    color: colors.foreground,
     fontWeight: '600',
   },
   progressText: {
     ...typography.caption,
     color: colors.mutedForeground,
-    marginTop: 8,
     textAlign: 'center',
   },
-  challengeCard: { padding: 24 },
-  challengeHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
-  challengeIcon: { fontSize: 32, marginRight: 16 },
-  challengeContent: { flex: 1 },
+  challengeCard: { padding: 24, gap: 20 },
+  challengeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  challengeIcon: { fontSize: 48, textAlign: 'center' },
+  challengeContent: { flex: 1, gap: 8 },
   challengeTitle: {
     ...typography.heading3,
     color: colors.foreground,
-    marginBottom: 4,
   },
   challengeDescription: {
-    ...typography.body,
+    ...typography.bodySmall,
     color: colors.mutedForeground,
-    lineHeight: 22,
+    lineHeight: 20,
   },
-  challengeButton: { width: '100%' },
+  challengeButton: { marginTop: 4 },
   achievementsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    gap: 16,
+    gap: 12,
   },
   achievementCard: {
-    width: (width - 72) / 2,
-    padding: 20,
+    width: (width - 64) / 2,
     alignItems: 'center',
+    padding: 16,
     minHeight: 100,
-    marginBottom: 16,
+    justifyContent: 'center',
   },
-  achievementIcon: { fontSize: 32, marginBottom: 12, textAlign: 'center' },
+  achievementIcon: { fontSize: 32, marginBottom: 8, textAlign: 'center' },
   achievementTitle: {
-    ...typography.bodySmall,
+    ...typography.caption,
     color: colors.foreground,
     textAlign: 'center',
     fontWeight: '600',
-    lineHeight: 18,
   },
   activityItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 20,
-    marginBottom: 16,
+    padding: 16,
+    marginBottom: 12,
+    gap: 16,
   },
-  activityIcon: { fontSize: 28, marginRight: 16 },
-  activityContent: { flex: 1 },
+  activityIcon: { fontSize: 24, textAlign: 'center', width: 30 },
+  activityContent: { flex: 1, gap: 4 },
   activityTitle: {
-    ...typography.body,
+    ...typography.bodySmall,
     color: colors.foreground,
-    marginBottom: 4,
-    fontWeight: '500',
+    fontWeight: '600',
   },
-  activityTime: { ...typography.caption, color: colors.mutedForeground },
-  featuredCard: {
-    padding: 24,
-    backgroundColor: colors.card,
-    borderWidth: 2,
-    borderColor: colors.electricPurple,
+  activityTime: {
+    ...typography.caption,
+    color: colors.mutedForeground,
   },
+  featuredCard: { padding: 24, gap: 16, alignItems: 'center' },
   featuredTitle: {
     ...typography.heading3,
     color: colors.foreground,
-    marginBottom: 8,
+    textAlign: 'center',
   },
   featuredDescription: {
     ...typography.body,
     color: colors.mutedForeground,
-    marginBottom: 20,
+    textAlign: 'center',
     lineHeight: 22,
   },
-  featuredButton: { width: '100%' },
-  bottomSpacing: { height: 100 },
+  featuredButton: { marginTop: 8 },
+  bottomSpacing: { height: 40 },
 });

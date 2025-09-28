@@ -61,7 +61,7 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }
   };
 
-  // Connect to wallet
+  // Connect to wallet using simplified approach
   const connect = async (): Promise<boolean> => {
     try {
       setIsLoading(true);
@@ -76,11 +76,12 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         console.log('❌ Wallet connection failed:', newState.error);
         return false;
       }
-    } catch (error) {
+      
+    } catch (error: any) {
       console.error('❌ Wallet connection error:', error);
       setWalletState({ 
         ...initialWalletState, 
-        error: 'Failed to connect wallet' 
+        error: error.message || 'Failed to connect wallet' 
       });
       return false;
     } finally {

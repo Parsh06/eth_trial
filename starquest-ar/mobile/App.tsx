@@ -1,3 +1,5 @@
+import "node-libs-expo/globals";
+import "react-native-url-polyfill/auto";
 import 'react-native-get-random-values';
 import React, { Suspense, lazy } from "react";
 import { View, Text, StyleSheet, StatusBar } from "react-native";
@@ -8,17 +10,18 @@ import { Preloader } from "./src/components/Preloader";
 import { BottomNav } from "./src/components/layout/BottomNav";
 import { colors } from "./src/utils/colors";
 
-// Lazy load screens with named exports
-const LandingScreen = lazy(() => import("./src/screens/LandingScreen").then(m => ({ default: m.LandingScreen })));
-const LoginScreen = lazy(() => import("./src/screens/LoginScreen").then(m => ({ default: m.LoginScreen })));
-const OnboardingScreen = lazy(() => import("./src/screens/OnboardingScreen").then(m => ({ default: m.OnboardingScreen })));
-const HomeScreen = lazy(() => import("./src/screens/HomeScreen").then(m => ({ default: m.HomeScreen })));
-const MapScreen = lazy(() => import("./src/screens/MapScreen").then(m => ({ default: m.MapScreen })));
-const QuestListScreen = lazy(() => import("./src/screens/QuestListScreen").then(m => ({ default: m.QuestListScreen })));
-const LeaderboardScreen = lazy(() => import("./src/screens/LeaderboardScreen").then(m => ({ default: m.LeaderboardScreen })));
-const ProfileScreen = lazy(() => import("./src/screens/ProfileScreen").then(m => ({ default: m.ProfileScreen })));
-const ChallengeScreen = lazy(() => import("./src/screens/ChallengeScreen").then(m => ({ default: m.ChallengeScreen })));
-const RewardScreen = lazy(() => import("./src/screens/RewardScreen").then(m => ({ default: m.RewardScreen })));
+// Direct imports - using real screens now
+import { LandingScreen } from "./src/screens/LandingScreen";
+import { LoginScreen } from "./src/screens/LoginScreen";
+import { OnboardingScreen } from "./src/screens/OnboardingScreen";
+import { HomeScreen } from "./src/screens/HomeScreen";
+import { MapScreen } from "./src/screens/MapScreen";
+import { QuestListScreen } from "./src/screens/QuestListScreen";
+import { LeaderboardScreen } from "./src/screens/LeaderboardScreen";
+import { ProfileScreen } from "./src/screens/ProfileScreen";
+import { ChallengeScreen } from "./src/screens/ChallengeScreen";
+import { RewardScreen } from "./src/screens/RewardScreen";
+
 
 // Main App component with GameProvider
 const AppContent: React.FC = () => {

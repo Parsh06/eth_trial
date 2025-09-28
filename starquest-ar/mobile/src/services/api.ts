@@ -203,7 +203,25 @@ class ApiService {
   // Leaderboard methods
   async getLeaderboard(category: string, params?: any) {
     try {
-      const response = await this.api.get(`/leaderboard/${category}`, { params });
+      let endpoint: string;
+      switch (category) {
+        case 'stars':
+          endpoint = API_CONFIG.ENDPOINTS.LEADERBOARD.STARS;
+          break;
+        case 'quests':
+          endpoint = API_CONFIG.ENDPOINTS.LEADERBOARD.QUESTS;
+          break;
+        case 'streak':
+          endpoint = API_CONFIG.ENDPOINTS.LEADERBOARD.STREAK;
+          break;
+        case 'experience':
+          endpoint = API_CONFIG.ENDPOINTS.LEADERBOARD.EXPERIENCE;
+          break;
+        default:
+          endpoint = `/leaderboard/${category}`;
+      }
+      
+      const response = await this.api.get(endpoint, { params });
       return response.data;
     } catch (error) {
       console.log('API not available, using mock data');
