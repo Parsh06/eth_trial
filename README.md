@@ -1,43 +1,18 @@
-# StarQuest AR - Gamified AR Scavenger Hunt
+# StarQuest - Decentralised Stake-to-play mini-challenges with Hedera smart contracts and agent-driven payouts.
 
-A React Native mobile application built with Expo that simulates an AR scavenger hunt experience with Web3 integration and neo-brutalist design aesthetics.
+A React Native mobile application built with Expo that simulates a scavenger hunt experience with Web3 integration and neo-brutalist design aesthetics.
 
 ## 🎯 Overview
 
-StarQuest AR is a gamified augmented reality scavenger hunt application where users discover hidden stars in the real world, complete AI-powered challenges, and collect NFT rewards. The app features a bold neo-brutalist design with vibrant colors and playful animations.
+StarQuest is a gamified real time mapping scavenger hunt application where users discover hidden stars in the real world, complete AI-powered challenges, and collect NFT rewards. The app features a bold neo-brutalist design with vibrant colors and playful animations.
 
 ## 🚀 Technology Stack
 
 - **Framework**: React Native with Expo
 - **Language**: TypeScript
 - **Navigation**: React Navigation
-- **Camera**: Expo Camera with QR Code scanning
-- **Animations**: React Native Reanimated
-- **Icons**: Expo Vector Icons
-- **Haptics**: Expo Haptics for tactile feedback
 
-## 🎨 Design System
 
-### Neo-Brutalist Aesthetics
-- **Bold Typography**: Custom font weights and sizes
-- **High Contrast Colors**: Electric color palette with strong contrasts
-- **Geometric Shapes**: Sharp corners and defined borders
-- **Thick Borders**: 3-4px borders with shadow effects
-- **Vibrant Colors**: Electric purple, green, orange, and pink
-
-### Color Palette
-```typescript
-// Primary Colors
-primary: '#8B5CF6' // Electric Purple
-electricGreen: '#10B981'
-electricOrange: '#F59E0B'
-electricPink: '#EC4899'
-
-// Status Colors
-starAvailable: '#8B5CF6'
-starCompleted: '#10B981'
-starLocked: '#94A3B8'
-```
 
 ## 📱 Application Features
 
@@ -62,7 +37,7 @@ starLocked: '#94A3B8'
 - Progress indicators and achievement badges
 
 #### 4. Map Screen
-- Interactive 3x4 grid showing AR star locations
+- Interactive 3x4 grid showing real time mapping star locations
 - Star status indicators (available, completed, locked)
 - Interactive star selection with haptic feedback
 - Location-based star unlocking system
@@ -120,9 +95,7 @@ starLocked: '#94A3B8'
 **Purpose**: Animated progress visualization
 **Features**: Smooth fill animations, color-coded progress levels, percentage display
 
-### QRScanner
-**Purpose**: Camera-based QR code scanning for AR interactions
-**Features**: Real-time scanning, permission handling, overlay UI
+
 
 ## 🎮 Game Mechanics
 
@@ -136,7 +109,7 @@ starLocked: '#94A3B8'
 1. **Trivia Questions**: Knowledge-based challenges with multiple choice
 2. **Creative Tasks**: Photo/video submission with AI validation  
 3. **Puzzle Solving**: Logic puzzles and brain teasers
-4. **AR Interactions**: Scan real-world objects or QR codes
+4. **Real-time Mapping Interactions**: Interact dynamically with elements on a 2D map.
 5. **Social Challenges**: Team-based or community challenges
 
 ### Reward System
@@ -266,20 +239,27 @@ Onboarding → Wallet Connect → Main App
 - **Social Features**: Leaderboards and competitive elements
 - **Reward Mechanics**: NFT collection and rarity systems
 
-## 🚀 Deployment
+## 🎨 Design System
 
-The application is ready for deployment on:
-- **Expo Go**: Development and testing
-- **EAS Build**: Production builds for app stores
-- **Web**: Browser-based deployment
-- **Custom Development**: Standalone React Native builds
+### Neo-Brutalist Aesthetics
+- **Bold Typography**: Custom font weights and sizes
+- **High Contrast Colors**: Electric color palette with strong contrasts
+- **Geometric Shapes**: Sharp corners and defined borders
+- **Thick Borders**: 3-4px borders with shadow effects
+- **Vibrant Colors**: Electric purple, green, orange, and pink
 
-### Environment Variables
-```bash
-# Optional Web3 integration
-EXPO_PUBLIC_WALLET_CONNECT_PROJECT_ID=your_project_id
-EXPO_PUBLIC_BLOCKCHAIN_NETWORK=ethereum
-EXPO_PUBLIC_NFT_METADATA_URL=https://api.example.com/metadata
+### Color Palette
+```typescript
+// Primary Colors
+primary: '#8B5CF6' // Electric Purple
+electricGreen: '#10B981'
+electricOrange: '#F59E0B'
+electricPink: '#EC4899'
+
+// Status Colors
+starAvailable: '#8B5CF6'
+starCompleted: '#10B981'
+starLocked: '#94A3B8'
 ```
 
 ## 🎯 Usage
@@ -300,11 +280,11 @@ This codebase is designed to be easily extensible:
 4. Add multiplayer and social features
 5. Integrate with actual blockchain networks
 
+
+
 ## 📄 License
 
 This project serves as a template and starter kit for AR gamification applications with Web3 integration.
 
----
 
-**StarQuest AR** - A gamified AR scavenger hunt with Web3 integration and neo-brutalist design.
 
